@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Emotion Recognition | Autism Risk Estimator</title>
+  <meta name="description" content="Real-time facial emotion recognition and autism risk estimation dashboard."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg      : #0d0f1a;
+      --panel   : #161826;
+      --border  : #2a2d45;
+      --accent  : #6c63ff;
+      --accent2 : #00cfff;
+      --text    : #e2e8f0;
+      --muted   : #8892b0;
+      --risk-low  : #22c55e;
+      --risk-med  : #f59e0b;
+      --risk-high : #ef4444;
+      --radius  : 14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+    body { font-family:"Inter",sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+    /* ── Header ──────────────────────────────────── */
+    header {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 28px;
+      background:linear-gradient(135deg,#1a1c2e,#0d0f1a);
+      border-bottom:1px solid var(--border);
+    }
+    header h1 {
+      font-size:1.15rem; font-weight:700;
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .header-right { display:flex; align-items:center; gap:10px; }
+    .badge {
+      font-size:0.70rem; font-weight:600; padding:4px 12px; border-radius:50px;
+      background:rgba(108,99,255,0.15); color:var(--accent);
+      border:1px solid rgba(108,99,255,0.3); letter-spacing:0.5px;
+    }
+
+    /* ── Layout ──────────────────────────────────── */
+    main {
+      display:grid;
+      grid-template-columns:1fr 320px;
+      grid-template-rows:auto auto;
+      gap:18px; padding:20px 28px;
+      max-width:1280px; margin:0 auto;
+    }
+    .panel {
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:var(--radius); padding:18px;
+    }
+    .panel-title {
+      font-size:0.72rem; font-weight:600; color:var(--muted);
+      text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;
+    }
+
+    /* ── Video panel ─────────────────────────────── */
+    #video-panel { grid-column:1; grid-row:1/3; display:flex; flex-direction:column; gap:12px; }
+
+    #stream-wrapper {
+      position:relative; border-radius:10px; overflow:hidden;
+      border:2px solid var(--border); background:#000; min-height:320px;
+    }
+    #stream-img { width:100%; display:block; }
+
+    /* ── Live / Paused badge on video ────────────── */
+    #status-badge {
+      position:absolute; top:12px; left:12px;
+      display:flex; align-items:center; gap:6px;
+      background:rgba(0,0,0,0.55); padding:4px 10px;
+      border-radius:20px; backdrop-filter:blur(4px);
+      font-size:0.72rem; font-weight:600; letter-spacing:0.4px;
+      transition: all 0.3s;
+    }
+    #status-dot {
+      width:8px; height:8px; border-radius:50%;
+      background:var(--risk-low);
+      box-shadow:0 0 0 0 rgba(34,197,94,0.4);
+      animation:pulse 1.5s infinite;
+    }
+    #status-dot.paused { background:#f59e0b; animation:none; }
+    @keyframes pulse {
+      0%  { box-shadow:0 0 0 0 rgba(34,197,94,0.4); }
+      70% { box-shadow:0 0 0 8px rgba(34,197,94,0); }
+      100%{ box-shadow:0 0 0 0 rgba(34,197,94,0); }
+    }
+
+    /* ── Paused overlay on video ─────────────────── */
+    #pause-overlay {
+      display:none; position:absolute; inset:0;
+      background:rgba(0,0,0,0.55); backdrop-filter:blur(2px);
+      align-items:center; justify-content:center; flex-direction:column; gap:10px;
+      border-radius:8px;
+    }
+    #pause-overlay.active { display:flex; }
+    #pause-overlay .icon { font-size:3rem; }
+    #pause-overlay p { color:#fff; font-size:1rem; font-weight:600; }
+
+    /* ── Controls bar ────────────────────────────── */
+    #controls {
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    button {
+      cursor:pointer; font-family:inherit; font-weight:600;
+      font-size:0.82rem; border-radius:8px; border:none;
+      padding:9px 18px; transition:all 0.2s;
+    }
+    #btn-pause {
+      background:rgba(108,99,255,0.15); color:var(--accent);
+      border:1px solid rgba(108,99,255,0.35);
+    }
+    #btn-pause:hover { background:rgba(108,99,255,0.28); }
+    #btn-pause.paused {
+      background:rgba(34,197,94,0.15); color:var(--risk-low);
+      border:1px solid rgba(34,197,94,0.35);
+    }
+    #btn-reset {
+      background:rgba(239,68,68,0.1); color:#f87171;
+      border:1px solid rgba(239,68,68,0.3);
+    }
+    #btn-reset:hover { background:rgba(239,68,68,0.2); }
+
+    /* ── Emotion display strip ───────────────────── */
+    #emotion-display {
+      display:flex; align-items:center; gap:14px;
+      padding:12px 16px;
+      background:rgba(108,99,255,0.07);
+      border:1px solid rgba(108,99,255,0.18); border-radius:10px;
+    }
+    #emotion-label { font-size:1.45rem; font-weight:700; min-width:105px; }
+    #conf-bar-wrap { flex:1; background:rgba(255,255,255,0.06); border-radius:6px; height:9px; overflow:hidden; }
+    #conf-bar {
+      height:100%; width:0%;
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      border-radius:6px; transition:width 0.4s ease;
+    }
+    #conf-pct { font-size:0.82rem; color:var(--muted); min-width:46px; text-align:right; }
+
+    /* ── Right column ────────────────────────────── */
+    #risk-panel  { grid-column:2; grid-row:1; }
+    #chart-panel { grid-column:2; grid-row:2; }
+
+    /* ── Risk card ───────────────────────────────── */
+    #risk-level { font-size:2.4rem; font-weight:700; margin:6px 0 4px; transition:color 0.4s; }
+    #risk-reason { color:var(--muted); font-size:0.80rem; margin-bottom:14px; min-height:32px; line-height:1.5; }
+    .metric-row {
+      display:flex; justify-content:space-between;
+      padding:7px 0; border-bottom:1px solid var(--border); font-size:0.82rem;
+    }
+    .metric-row:last-child { border-bottom:none; }
+    .metric-key { color:var(--muted); }
+    .metric-val { font-weight:600; }
+    .risk-low  { color:var(--risk-low); }
+    .risk-med  { color:var(--risk-med); }
+    .risk-high { color:var(--risk-high); }
+
+    /* ── Chart ───────────────────────────────────── */
+    #emotionChart { max-height:230px; }
+
+    /* ── Footer ──────────────────────────────────── */
+    footer {
+      text-align:center; padding:14px; color:var(--muted);
+      font-size:0.72rem; border-top:1px solid var(--border); margin-top:4px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🧠 Emotion Recognition &amp; Autism Risk Estimator</h1>
+  <div class="header-right">
+    <span class="badge" id="header-badge">● LIVE</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── Video Feed ───────────────────────────────────────── -->
+  <section class="panel" id="video-panel">
+    <p class="panel-title">Live Camera Feed</p>
+
+    <div id="stream-wrapper">
+      <!-- Live / Paused badge -->
+      <div id="status-badge">
+        <div id="status-dot"></div>
+        <span id="status-text">LIVE</span>
+      </div>
+
+      <!-- Pause overlay -->
+      <div id="pause-overlay">
+        <div class="icon">⏸</div>
+        <p>Webcam Paused — Dashboard Still Tracking</p>
+      </div>
+
+      <img id="stream-img" src="/video_feed" alt="Live webcam feed with emotion annotations"/>
+    </div>
+
+    <!-- Controls -->
+    <div id="controls">
+      <button id="btn-pause" onclick="togglePause()">⏸ Pause Webcam</button>
+      <button id="btn-reset" onclick="resetSession()">⟳ Reset Session</button>
+    </div>
+
+    <!-- Emotion label strip -->
+    <div id="emotion-display">
+      <span id="emotion-label">—</span>
+      <div id="conf-bar-wrap"><div id="conf-bar"></div></div>
+      <span id="conf-pct">—</span>
+    </div>
+  </section>
+
+  <!-- ── Autism Risk Panel ────────────────────────────────── -->
+  <section class="panel" id="risk-panel">
+    <p class="panel-title">Autism Risk Estimation</p>
+    <div id="risk-level" class="risk-low">Low</div>
+    <p id="risk-reason">Collecting data...</p>
+
+    <div class="metric-row">
+      <span class="metric-key">Emotional Variation</span>
+      <span class="metric-val" id="m-variation">—</span>
+    </div>
+    <div class="metric-row">
+      <span class="metric-key">Neutral Dominance</span>
+      <span class="metric-val" id="m-neutral">—</span>
+    </div>
+    <div class="metric-row">
+      <span class="metric-key">Repetitive Pattern</span>
+      <span class="metric-val" id="m-repeat">—</span>
+    </div>
+    <div class="metric-row">
+      <span class="metric-key">Dominant Emotion</span>
+      <span class="metric-val" id="m-dominant">—</span>
+    </div>
+    <div class="metric-row">
+      <span class="metric-key">Frames Processed</span>
+      <span class="metric-val" id="m-frames">0</span>
+    </div>
+  </section>
+
+  <!-- ── Emotion Chart ────────────────────────────────────── -->
+  <section class="panel" id="chart-panel">
+    <p class="panel-title">Emotion Distribution (Session)</p>
+    <canvas id="emotionChart" role="img" aria-label="Emotion frequency bar chart"></canvas>
+  </section>
+
+</main>
+
+<footer>
+  Real-Time Emotion Recognition &amp; Autism Detection · B.Tech Final Year Project · CNN + OpenCV + Flask
+</footer>
+
+<script>
+  // ─── State ─────────────────────────────────────────────────────────────────
+  let isPaused = false;
+
+  // ─── Chart ─────────────────────────────────────────────────────────────────
+  const EMOTIONS = ["Angry","Disgust","Fear","Happy","Neutral","Sad","Surprise"];
+  const COLORS   = ["#EF5350","#FF7043","#FFA726","#66BB6A","#90A4AE","#42A5F5","#AB47BC"];
+
+  const ctx = document.getElementById("emotionChart").getContext("2d");
+  const chart = new Chart(ctx, {
+    type:"bar",
+    data:{
+      labels: EMOTIONS,
+      datasets:[{
+        label:"Detections",
+        data: new Array(7).fill(0),
+        backgroundColor: COLORS.map(c => c + "CC"),
+        borderColor:     COLORS,
+        borderWidth:1.5,
+        borderRadius:5,
+      }]
+    },
+    options:{
+      responsive:true,
+      animation:{ duration:400 },
+      plugins:{ legend:{ display:false } },
+      scales:{
+        x:{ ticks:{ color:"#8892b0", font:{ size:10 } }, grid:{ color:"#2a2d45" } },
+        y:{ ticks:{ color:"#8892b0" }, grid:{ color:"#2a2d45" }, beginAtZero:true },
+      }
+    }
+  });
+
+  // ─── Pause / Resume ────────────────────────────────────────────────────────
+  async function togglePause() {
+    const btn    = document.getElementById("btn-pause");
+    const dot    = document.getElementById("status-dot");
+    const stxt   = document.getElementById("status-text");
+    const overlay= document.getElementById("pause-overlay");
+    const badge  = document.getElementById("header-badge");
+
+    if (!isPaused) {
+      await fetch("/pause");
+      isPaused = true;
+      btn.textContent = "▶ Resume Webcam";
+      btn.classList.add("paused");
+      dot.classList.add("paused");
+      stxt.textContent = "PAUSED";
+      overlay.classList.add("active");
+      badge.textContent = "⏸ PAUSED";
+      badge.style.color = "#f59e0b";
+    } else {
+      await fetch("/resume");
+      isPaused = false;
+      btn.textContent = "⏸ Pause Webcam";
+      btn.classList.remove("paused");
+      dot.classList.remove("paused");
+      stxt.textContent = "LIVE";
+      overlay.classList.remove("active");
+      badge.textContent = "● LIVE";
+      badge.style.color = "";
+    }
+  }
+
+  // ─── Reset ─────────────────────────────────────────────────────────────────
+  async function resetSession() {
+    await fetch("/reset");
+    chart.data.datasets[0].data = new Array(7).fill(0);
+    chart.update();
+    document.getElementById("risk-level").textContent  = "Low";
+    document.getElementById("risk-reason").textContent = "Session reset.";
+    document.getElementById("m-frames").textContent    = "0";
+    document.getElementById("emotion-label").textContent = "—";
+    document.getElementById("conf-pct").textContent = "—";
+    document.getElementById("conf-bar").style.width = "0%";
+  }
+
+  // ─── Poll /stats every 700ms (always runs, even when paused) ───────────────
+  const RISK_CLASS = { Low:"risk-low", Medium:"risk-med", High:"risk-high" };
+
+  async function pollStats() {
+    try {
+      const res  = await fetch("/stats");
+      const data = await res.json();
+
+      // Only update live emotion when not paused
+      if (!data.paused) {
+        document.getElementById("emotion-label").textContent = data.emotion;
+        document.getElementById("conf-pct").textContent = data.confidence + "%";
+        document.getElementById("conf-bar").style.width = data.confidence + "%";
+      }
+
+      // Autism risk — always update
+      const riskEl = document.getElementById("risk-level");
+      riskEl.textContent = data.risk;
+      riskEl.className   = RISK_CLASS[data.risk] || "risk-low";
+      document.getElementById("risk-reason").textContent = data.reason;
+
+      // Metrics — always update
+      const m = data.metrics || {};
+      document.getElementById("m-variation").textContent = m.variation_pct  != null ? m.variation_pct  + "%" : "—";
+      document.getElementById("m-neutral").textContent   = m.neutral_ratio   != null ? m.neutral_ratio  + "%" : "—";
+      document.getElementById("m-repeat").textContent    = m.repeat_ratio    != null ? m.repeat_ratio   + "%" : "—";
+      document.getElementById("m-dominant").textContent  = m.dominant_emotion ?? "—";
+      document.getElementById("m-frames").textContent    = data.total_frames ?? 0;
+
+      // Chart — always update
+      const counts = data.emotion_counts || {};
+      chart.data.datasets[0].data = EMOTIONS.map(e => counts[e] || 0);
+      chart.update("none");
+
+    } catch(e) { /* server not ready */ }
+  }
+
+  setInterval(pollStats, 700);
+  pollStats();
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+data/
+outputs/
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Model weights & large files
+# *.h5 and similar are ignored by default, but we explicitly INCLUDE
+# the pre-trained emotion model so others don't need to retrain.
+*.keras
+*.pkl
+*.pt
+*.pth
+# Allow the project's pre-trained model specifically
+!models/emotion_model.h5
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
