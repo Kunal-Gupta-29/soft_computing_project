@@ -1,64 +1,28 @@
 # Model Evaluation — Metrics & Results
 
-## Expected Performance (FER2013, CPU-trained)
+## Expected Performance (FER2013 + RAF-DB, MobileNetV2)
 
 | Metric | Value (approx.) |
 |--------|----------------|
-| Training Accuracy | 70 – 78 % |
-| Validation Accuracy | 62 – 68 % |
-| Test Accuracy | 60 – 66 % |
+| Training Accuracy | ~85 – 92 % |
+| Validation Accuracy | ~73 – 80 % |
+| Test Accuracy | ~70 – 76 % |
 
-> FER2013 is a notoriously noisy dataset (even human accuracy is ~65%). These numbers are typical for a CNN of this scale trained purely on CPU without transfer learning.
-
----
-
-## Per-Class Performance (Typical)
-
-| Emotion | Precision | Recall | F1 |
-|---------|-----------|--------|----|
-| Angry   | 0.55 | 0.52 | 0.53 |
-| Disgust | 0.60 | 0.55 | 0.57 |
-| Fear    | 0.45 | 0.40 | 0.42 |
-| Happy   | 0.89 | 0.90 | 0.89 |
-| Sad     | 0.55 | 0.58 | 0.56 |
-| Surprise| 0.75 | 0.72 | 0.73 |
-| Neutral | 0.62 | 0.65 | 0.63 |
-
-**Happy** and **Surprise** are easiest to classify (distinctive facial geometry).  
-**Fear** and **Disgust** are hardest (frequently confused with Angry/Sad).
-
----
+> The combination of FER2013 and RAF-DB naturally caps validation at ~80% because of the extreme noise inherent in the dataset. Anything >70% on this combined "in-the-wild" dataset is considered excellent for a real-time webcam system.
 
 ## Generating Metrics
-
-```bash
-# After training:
-python evaluate.py
-```
-
-This will print the classification report and save two images:
-- `outputs/confusion_matrix.png`  — Raw counts + Row-normalised %
-- `outputs/training_curves.png`   — Accuracy & loss over epochs (generated during training)
-
----
+After training completes via `python train.py --mode tl`:
+You can view the plotted results in your `outputs/` folder:
+- `outputs/training_curves(TL_Phase1_Frozen).png`
+- `outputs/training_curves(TL_Phase2_Fine-tune).png`
+- `outputs/confusion_matrix.png`
 
 ## Confusion Matrix — Common Errors
-
+Even highly optimized Transfer Learning models suffer from these human-level ambiguities:
 | Confused as | Root cause |
 |-------------|-----------|
-| Fear → Angry | Both show raised brows + open mouth |
-| Sad → Neutral | Subtle difference; mislabelled in dataset |
-| Disgust → Angry | Overlapping facial action units |
+| Fear → Surprise | Both show raised brows + open mouth |
+| Sad → Neutral | Subtle difference; heavily mislabeled in FER2013 dataset |
 
----
-
-## Accuracy Improvement Suggestions
-
-See `docs/improvements.md` for detailed suggestions.
-
-Quick wins:
-1. **Pre-trained backbone** (VGG16/MobileNetV2 fine-tuning on FER2013) → +10–15%
-2. **More augmentation** (brightness jitter, contrast, Gaussian noise)
-3. **Class-weighted loss** (compensates for Disgust class imbalance in FER2013)
-4. **Ensemble** 3 models and average predictions
-5. **Label smoothing** (0.1) — reduces overconfidence on noisy labels
+## ASD Model Performance
+The binary MobileNetV2 Autistic classifier generally hits **>95%** accuracy very rapidly. *(Note: This is an artifact of dataset bias comparing clinical backgrounds to stock photos, making the classification linearly separable).*
