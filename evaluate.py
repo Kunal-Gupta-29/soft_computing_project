@@ -4,9 +4,9 @@ evaluate.py
 Evaluates the saved emotion CNN model on the FER2013 test split.
 
 Outputs:
-    • Overall accuracy printed to console
-    • Per-class precision, recall, F1 (sklearn classification report)
-    • Confusion matrix saved as outputs/confusion_matrix.png
+    * Overall accuracy printed to console
+    * Per-class precision, recall, F1 (sklearn classification report)
+    * Confusion matrix saved as outputs/confusion_matrix.png
 
 Run:
     python evaluate.py
@@ -30,7 +30,7 @@ from config import MODEL_PATH, OUTPUT_DIR, EMOTIONS, FER_CSV_PATH
 from preprocess import load_fer2013, _detect_format, get_folder_generators
 
 
-# ─── Evaluate ────────────────────────────────────────────────────────────────
+# --- Evaluate ----------------------------------------------------------------
 
 def evaluate():
     """Load saved model, run on test set, print metrics, save confusion matrix."""
@@ -47,7 +47,7 @@ def evaluate():
         return
 
     print("=" * 60)
-    print("  Emotion Recognition — Model Evaluation")
+    print("  Emotion Recognition -- Model Evaluation")
     print(f"  Dataset format: {fmt.upper()}")
     print("=" * 60)
 
@@ -114,12 +114,12 @@ def _plot_confusion_matrix(y_true, y_pred, label_names):
     axes[1].set_xlabel("Predicted Label")
     axes[1].set_ylabel("True Label")
 
-    plt.suptitle("FER2013 — CNN Emotion Classifier Evaluation", fontsize=15, fontweight="bold")
+    plt.suptitle("FER2013 -- CNN Emotion Classifier Evaluation", fontsize=15, fontweight="bold")
     plt.tight_layout()
 
     save_path = os.path.join(OUTPUT_DIR, "confusion_matrix.png")
     plt.savefig(save_path, dpi=150, bbox_inches="tight")
-    print(f"[evaluate] Confusion matrix saved → {save_path}")
+    print(f"[evaluate] Confusion matrix saved -> {save_path}")
     plt.close()
 
 

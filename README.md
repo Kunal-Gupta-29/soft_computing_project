@@ -1,256 +1,412 @@
-# 🧠 Real-Time Emotion Recognition & Autism Detection
-### Using CNN-Based Soft Computing Techniques
-**B.Tech Final Year Project**
+# Optimized Real-Time Emotion Recognition and Autism Detection
+### CNN + Genetic Algorithm-Based Soft Computing
 
-> **Disclaimer**: This is an academic demonstration tool. It is **not** a clinical diagnostic instrument.
+> **B.Tech Final Year Project** | Soft Computing | Deep Learning | Transfer Learning
 
 ---
 
 ## 📌 Project Overview
 
-This project implements a real-time facial **emotion recognition** system using a custom Convolutional Neural Network (CNN) trained on the **FER2013** dataset (~35,887 images, 7 emotion classes). A secondary **rule-based module** analyses the stream of detected emotions to estimate **Autism Spectrum Disorder (ASD) risk** based on three behavioural indicators:
-
-| Indicator | Description |
-|-----------|-------------|
-| 🎭 Emotional Variation | Reduced range of distinct emotions expressed |
-| 😐 Flat Affect | Prolonged neutral / blank expression |
-| 🔁 Repetitive Pattern | Same emotion persisting for an extended period |
-
-The system ships with a **pre-trained model** — no GPU or training required. Just clone, install, and run.
-
----
-
-## ✨ Features
-
-- ✅ Real-time face detection via OpenCV Haar cascade
-- ✅ CNN-based emotion classification (7 classes)
-- ✅ Live autism risk estimation (Low / Medium / High)
-- ✅ Webcam overlay with HUD (emotion label, confidence %, FPS)
-- ✅ Flask web dashboard with live MJPEG stream + charts
-- ✅ Pre-trained model included — **no training needed**
+This project implements a **complete AI pipeline** for:
+1. **Real-time facial emotion recognition** using MobileNetV2 Transfer Learning (7 emotions)
+2. **Autism Spectrum Disorder (ASD) risk assessment** using:
+   - A trained ML binary classifier (Autistic / Non-Autistic)
+   - A behavioral heuristic sliding-window pattern analyzer
+3. **Genetic Algorithm** optimization for CNN hyperparameters
+4. **Grad-CAM** explainability visualization
+5. **Flask web dashboard** for live monitoring
 
 ---
 
-## 🗂 Project Structure
+## 🏗️ System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    INPUT: Webcam Frame (640×480)                 │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │
+                     OpenCV Haar Cascade
+                     (Face Detection)
+                               │
+              ┌────────────────┼────────────────┐
+              │                │                │
+              ▼                ▼                ▼
+    ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+    │    CLAHE     │  │  CLAHE +     │  │  CLAHE +     │
+    │  Preprocess  │  │ Resize 128×128│  │ Resize 128×128│
+    └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+           │                 │                  │
+           ▼                 ▼                  ▼
+  ┌────────────────┐ ┌───────────────┐  ┌──────────────────┐
+  │  Emotion CNN   │ │ MobileNetV2   │  │  ASD MobileNetV2  │
+  │  (Custom CNN)  │ │ Transfer Learn │  │  Binary Classifier│
+  │  48×48 gray    │ │ 128×128 gray  │  │  128×128 gray    │
+  └────────┬───────┘ └──────┬────────┘  └──────────┬───────┘
+           │                │                       │
+           └───────┬────────┘                       │
+                   │                                │
+     Softmax Smoothing (5-frame avg)    Autistic / Non-Autistic
+     + Prior Correction                + Confidence
+                   │
+                   ▼
+         Emotion + Confidence
+                   │
+                   ├──────────────────────────────────────┐
+                   ▼                                      ▼
+     ┌─────────────────────────┐          ┌──────────────────────────┐
+     │   AutismDetector        │          │    Grad-CAM Heatmap       │
+     │   (Sliding Window)      │          │    (Explainability)       │
+     │   60-frame window       │          │    Conv_1 layer gradients  │
+     │   - Variety             │          └──────────────────────────┘
+     │   - Flat Affect         │
+     │   - Repetitive Pattern  │
+     └──────────┬──────────────┘
+                │
+                ▼
+    ┌───────────────────────────────┐
+    │   HUD / Flask Dashboard       │
+    │   - Emotion label + conf      │
+    │   - ASD ML prediction         │
+    │   - Behavioral risk (L/M/H)   │
+    │   - Metrics + Grad-CAM        │
+    └───────────────────────────────┘
+```
+
+---
+
+## 📂 Project Structure
 
 ```
 soft_computing_project/
-│
-├── app.py              ← Flask web dashboard
-├── realtime.py         ← Webcam CLI real-time detection
-├── train.py            ← (Optional) CNN training pipeline
-├── evaluate.py         ← Metrics, confusion matrix
-├── preprocess.py       ← FER2013 data loading + augmentation
-├── model.py            ← CNN architecture definition
-├── autism_detector.py  ← Rule-based autism risk estimator
-├── emotion_tracker.py  ← Session emotion timeline + charts
-├── emotion.py          ← Unified CLI entry-point
-├── config.py           ← All constants & hyperparameters
-│
-├── models/
-│   └── emotion_model.h5   ← ✅ Pre-trained model (included)
-│
+├── config.py              # Central configuration (all paths, hyperparams)
+├── model.py               # CNN + MobileNetV2 architectures
+├── preprocess.py          # Data loading, augmentation, generators
+├── train.py               # Emotion model training (CNN or TL, 2-phase)
+├── train_autism.py        # ASD binary classifier training (NEW)
+├── ga_optimizer.py        # Genetic Algorithm hyperparameter optimizer
+├── gradcam.py             # Grad-CAM explainability (NEW)
+├── autism_detector.py     # AutismDetector (heuristic) + ASDModelDetector (ML)
+├── realtime.py            # OpenCV webcam detection (dual model)
+├── app.py                 # Flask web dashboard
+├── evaluate.py            # Model evaluation + confusion matrix
+├── emotion_tracker.py     # Session emotion history tracking
+├── emotion.py             # Utility functions
 ├── templates/
-│   └── index.html         ← Web dashboard UI
-│
-├── data/                  ← Place fer2013.csv here (only if retraining)
-├── outputs/               ← Generated charts & plots
-├── logs/                  ← TensorBoard training logs
-│
-├── docs/
-│   ├── setup.md           ← Detailed setup & troubleshooting
-│   ├── architecture.md    ← CNN architecture explanation
-│   ├── evaluation.md      ← Accuracy metrics & discussion
-│   └── improvements.md    ← Strategies to boost accuracy
-│
+│   └── index.html         # Premium dark dashboard (CSS + JS)
+├── data/
+│   ├── train/             # FER2013 training images (7 subfolders)
+│   ├── test/              # FER2013 test images
+│   └── asd/               # ASD dataset (autistic/ + non_autistic/)
+├── models/
+│   ├── emotion_model.h5   # Trained custom CNN
+│   ├── emotion_model_tl.h5# Trained MobileNetV2 (TL)
+│   └── asd_model.h5       # Trained ASD classifier
+├── outputs/
+│   ├── training_curves.png
+│   ├── confusion_matrix.png
+│   ├── ga_accuracy_comparison.png
+│   ├── ga_best_params.json
+│   ├── ga_fitness_log.csv
+│   └── ga_summary.txt
 └── requirements.txt
 ```
 
 ---
 
-## ⚡ Quick Start (Pre-trained Model — Recommended)
+## 📦 Dataset Setup
 
-> The trained model `models/emotion_model.h5` is already included. **You do not need to download data or retrain anything.**
-
-### Step 1 — Clone the Repository
-
-```bash
-git clone https://github.com/<your-username>/soft_computing_project.git
-cd soft_computing_project
+### 1. FER2013 (Emotion Recognition)
+Download from Kaggle:
+```
+https://www.kaggle.com/datasets/msambare/fer2013
+```
+Extract so your folder looks like:
+```
+data/train/angry/      data/test/angry/
+data/train/disgust/    data/test/disgust/
+data/train/fear/       data/test/fear/
+data/train/happy/      data/test/happy/
+data/train/neutral/    data/test/neutral/
+data/train/sad/        data/test/sad/
+data/train/surprise/   data/test/surprise/
 ```
 
-### Step 2 — Create & Activate Virtual Environment
+### 2. ASD Dataset (Autism Detection — Optional)
+Download from Kaggle:
+```
+https://www.kaggle.com/datasets/imrankhan77/autistic-children-facial-data-set
+```
+Place images in:
+```
+data/asd/autistic/      (autistic children facial images)
+data/asd/non_autistic/  (non-autistic children facial images)
+```
 
-**Windows (PowerShell):**
-```powershell
+---
+
+## 🚀 Quick Start
+
+### Setup Environment
+```bash
+# Create virtual environment
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
+.venv\Scripts\activate          # Windows
+# source .venv/bin/activate     # Linux/Mac
 
-> ⚠️ If you get an execution policy error, run this once:
-> ```powershell
-> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-> ```
-
-**macOS / Linux:**
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### Step 3 — Install Dependencies
-
-```bash
-pip install --upgrade pip
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-> ⏱ This installs TensorFlow, OpenCV, Flask, etc. — takes **2–5 minutes**.
-
-### Step 4 — Run the App
-
-**Option A — Real-time Webcam Window (OpenCV)**
+### Train Emotion Model
 ```bash
+# Option A: MobileNetV2 Transfer Learning (recommended, ~72-80% accuracy)
+python train.py --mode tl
+
+# Option B: Custom CNN (faster, ~62-68% accuracy)
+python train.py --mode cnn
+
+# Option C: Run GA optimization first, then train
+python train.py --ga
+```
+
+### Train ASD Model (requires ASD dataset)
+```bash
+python train_autism.py
+```
+
+### Run Genetic Algorithm Optimization
+```bash
+# Full GA (slow, trains complete model with best params)
+python ga_optimizer.py
+
+# Quick demo (only 2 generations, 4 individuals, 3 trial epochs)
+python ga_optimizer.py --gen 2 --pop 4 --trial-epochs 3
+
+# GA without full retraining (fast comparison only)
+python ga_optimizer.py --no-full-train
+```
+
+### Real-Time Detection
+```bash
+# OpenCV window (recommended)
 python realtime.py
-```
-A window opens showing:
-- Face bounding box with **emotion label + confidence %**
-- Top-right HUD: **autism risk level**, variation %, neutral %, repeat %
-- Bottom bar: current **FPS** and reason string
 
-Press `Q` or `Esc` to quit. Session chart is saved to `outputs/emotion_history.png`.
-
----
-
-**Option B — Flask Web Dashboard (Browser)**
-```bash
+# Flask web dashboard
 python app.py
+# Open: http://localhost:5000
 ```
-Then open your browser at 👉 **http://localhost:5000**
 
-The dashboard shows:
-- 🎥 Live annotated video stream
-- 🩺 Autism risk card with real-time metrics
-- 📊 Emotion distribution chart (auto-refreshes every 600 ms)
-- ⏸ Pause / ▶ Resume / 🔄 Reset controls
+### Evaluate Model
+```bash
+python evaluate.py
+```
 
 ---
 
-## 🎭 Emotion Classes
+## 🧠 Technical Concepts (Viva Preparation)
 
-| ID | Emotion | ID | Emotion |
-|----|---------|-------|---------|
-| 0  | Angry   | 4  | Sad      |
-| 1  | Disgust | 5  | Surprise |
-| 2  | Fear    | 6  | Neutral  |
-| 3  | Happy   | — | —        |
+### 1. Convolutional Neural Network (CNN)
 
----
+A CNN learns hierarchical visual features from images:
+- **Layer 1 (Conv2D)**: Detects edges and textures
+- **Layer 2 (Conv2D)**: Detects corners, curves, simple shapes
+- **Layer 3 (Conv2D)**: Detects complex patterns (eyes, mouths)
+- **MaxPooling**: Reduces spatial size, increases receptive field
+- **BatchNorm**: Normalizes activations → faster training, less overfitting
+- **Dropout**: Randomly zeroes neurons → regularization
+- **Dense head**: Classifies into 7 emotion categories
 
-## 🧠 CNN Architecture
-
-```
-Input (48×48×1 grayscale)
-  → Conv Block 1: Conv2D×2 (32 filters) → BatchNorm → MaxPool → Dropout
-  → Conv Block 2: Conv2D×2 (64 filters) → BatchNorm → MaxPool → Dropout
-  → Conv Block 3: Conv2D×2 (128 filters) → BatchNorm → MaxPool → Dropout
-  → Flatten
-  → Dense(256) → BatchNorm → ReLU → Dropout(0.5)
-  → Dense(128) → ReLU → Dropout(0.3)
-  → Dense(7, Softmax)
-```
-
-See [`docs/architecture.md`](docs/architecture.md) for the full explanation.
+**Why custom CNN gets ~62-65%?**
+Training from scratch on only 28k FER2013 images is hard. The model may overfit or underfit without proper learned priors.
 
 ---
 
-## 📊 Model Performance
+### 2. Transfer Learning (MobileNetV2)
 
-| Split      | Accuracy  |
-|------------|-----------|
-| Training   | ~72–78 %  |
-| Validation | ~62–66 %  |
-| Test       | ~60–65 %  |
+**Core idea**: Use a model pre-trained on ImageNet (1.28M images, 1000 classes) and adapt it to our task.
 
-Run `python evaluate.py` to generate the confusion matrix and per-class report (requires `data/fer2013.csv`).
+**Why it improves accuracy to ~72-80%:**
+- MobileNetV2 has already learned rich feature representations (edges → textures → faces → expressions)
+- Early layers encode universally useful features (edges, colors)
+- Later layers encode task-specific features (already close to facial recognition)
+- We only need to fine-tune the last 30 layers rather than train from scratch
+
+**Two-Phase Strategy:**
+```
+Phase 1: Freeze all 154 backbone layers → Train only the new Dense head
+         (Fast convergence, avoids destroying pretrained weights)
+
+Phase 2: Unfreeze last 30 layers → Fine-tune with low learning rate (1e-4)
+         (Adapts high-level features to emotion-specific patterns)
+```
+
+**Why MobileNetV2 (not ResNet)?**
+- Designed for efficiency: depthwise separable convolutions
+- Fast on CPU (important for this project)
+- 3.4M parameters vs ResNet50's 25M
+
+---
+
+### 3. Genetic Algorithm (GA) Optimization
+
+**Why GA instead of manual tuning?**
+- Search space: 7 hyperparameters × multiple values = **78,125+ combinations**
+- Manual tuning: subjective, slow, misses non-obvious interactions
+- Grid search: computationally infeasible on CPU
+- **GA intelligently explores** the space using biological evolution principles
+
+**GA Flow:**
+```
+1. INITIALIZATION     → Create N random individuals (chromosomes)
+                         Each chromosome = set of hyperparameter values
+
+2. FITNESS EVALUATION → Train CNN for 5 epochs per individual
+                         Fitness = validation accuracy
+
+3. SELECTION          → Tournament selection
+                         k candidates compete; best one becomes parent
+
+4. CROSSOVER          → Single-point crossover at gene index cp
+                         Child1 = Parent1[:cp] + Parent2[cp:]
+                         Child2 = Parent2[:cp] + Parent1[cp:]
+
+5. MUTATION           → Each gene mutated with P=0.20
+                         Prevents premature convergence
+
+6. ELITISM            → Top 2 individuals survive unchanged
+                         Ensures best solution never lost
+
+7. REPEAT             → For GA_GENERATIONS cycles
+```
+
+**Hyperparameters Optimized:**
+| Gene | Values Tried |
+|------|-------------|
+| learning_rate | 1e-4 to 1e-2 (7 choices) |
+| batch_size | 16, 32, 64, 128 |
+| dropout_conv | 0.10 to 0.40 (7 choices) |
+| dropout_dense1 | 0.30 to 0.60 (7 choices) |
+| dropout_dense2 | 0.20 to 0.40 (5 choices) |
+| dense_units | 128, 256, 512 |
+| l2_reg | 1e-5 to 1e-3 (5 choices) |
+
+---
+
+### 4. Grad-CAM (Explainability)
+
+Grad-CAM answers: *"Which pixels made the CNN predict 'Happy'?"*
+
+**Algorithm:**
+```
+1. Forward pass → get prediction for target class
+2. Compute gradient of class score w.r.t. last conv layer output
+3. Global-average-pool the gradients → per-channel weights
+4. Weighted sum of feature maps → raw heatmap
+5. ReLU → only keep positive activations
+6. Resize heatmap to input size → overlay with jet colormap
+```
+
+**Interpretation:**
+- 🔴 Red/Yellow: High importance (model is "looking here")
+- 🔵 Blue: Low importance
+
+---
+
+### 5. Soft Computing Alignment
+
+| Technique | Soft Computing Category |
+|-----------|------------------------|
+| CNN | Neural Networks (approximate computation) |
+| Transfer Learning | Knowledge transfer (fuzzy/imprecise adaptation) |
+| Genetic Algorithm | Evolutionary Computation (nature-inspired) |
+| Behavioral heuristic detector | Fuzzy logic (rule-based approximate reasoning) |
+| Prior-probability correction | Bayesian soft inference |
+| Temporal softmax smoothing | Probabilistic filtering |
+
+Soft computing differs from hard computing by tolerating **uncertainty, imprecision, and partial truth** to achieve practical solutions.
+
+---
+
+## 📊 Accuracy Comparison
+
+| Configuration | Expected Accuracy |
+|---------------|-------------------|
+| Baseline custom CNN (48×48) | ~55-65% |
+| Custom CNN + Data Augmentation | ~62-68% |
+| Custom CNN + **GA Optimized** | ~64-70% |
+| **MobileNetV2 Transfer Learning (128×128)** | ~72-80% |
+| MobileNetV2 + GA Optimized | ~74-82% |
+
+*State-of-the-art on FER2013: ~73-76% with standard CNNs; ~91% with Vision Transformers.*
 
 ---
 
 ## 🔧 Configuration
 
-All tunable parameters are in [`config.py`](config.py):
-
+All settings in `config.py`:
 ```python
-WEBCAM_INDEX       = 0      # Change to 1 or 2 if webcam not detected
-MIN_CONFIDENCE     = 0.40   # Min softmax confidence to display a label
-AUTISM_WINDOW_SIZE = 30     # Sliding window (frames) for risk estimation
-AUTISM_EVAL_EVERY  = 15     # Re-evaluate autism risk every N frames
-FLASK_PORT         = 5000   # Web dashboard port
+USE_TRANSFER_LEARNING = True   # True=MobileNetV2, False=Custom CNN
+IMG_SIZE    = 48               # Custom CNN input
+IMG_SIZE_TL = 128              # Transfer learning input
+GA_POPULATION_SIZE = 10        # GA population
+GA_GENERATIONS     = 5         # GA generations
+GA_TRIAL_EPOCHS    = 5         # Epochs per GA fitness evaluation
 ```
 
 ---
 
-## 🔄 Optional: Retrain the Model Yourself
+## 📋 Requirements
 
-> ⚠️ Only needed if you want to train from scratch. Requires the FER2013 dataset (~300 MB).
-
-**Step 1 — Get the Dataset**
-1. Create a free account at [https://www.kaggle.com](https://www.kaggle.com)
-2. Download: [FER2013 on Kaggle](https://www.kaggle.com/datasets/msambare/fer2013)
-3. Extract `fer2013.csv` and place it at: `data/fer2013.csv`
-
-**Step 2 — Train**
-```bash
-python train.py
 ```
-- Runs for up to 50 epochs (EarlyStopping typically kicks in at epoch 30–40)
-- On a standard CPU laptop: **~25–45 minutes**
-- Saves best model to `models/emotion_model.h5` (overwrites pre-trained)
-- Saves training curves to `outputs/training_curves.png`
+tensorflow>=2.10
+opencv-python>=4.5
+flask>=2.0
+numpy
+pandas
+scikit-learn
+matplotlib
+seaborn
+Pillow
+```
 
 ---
 
-## 🛠 Technologies
-
-| Category | Library / Version |
-|----------|-------------------|
-| Language | Python 3.11 |
-| Deep Learning | TensorFlow 2.x / Keras |
-| Computer Vision | OpenCV 4.x |
-| Web Framework | Flask 3.0 |
-| Data Processing | NumPy, Pandas |
-| Visualisation | Matplotlib, Seaborn |
-| ML Utilities | scikit-learn |
-
----
-
-## 🐛 Troubleshooting
+## 🛠️ Troubleshooting
 
 | Problem | Solution |
-|---------|----------|
-| `ModuleNotFoundError: tensorflow` | Activate the venv first, then `pip install -r requirements.txt` |
-| `Could not load Haar cascade` | `pip install opencv-python` then retry |
-| `Model not found` | Make sure `models/emotion_model.h5` exists (it ships with the repo) |
-| Webcam not detected | Try changing `WEBCAM_INDEX = 1` or `2` in `config.py` |
-| Flask page won't load | Use `http://localhost:5000` (not `https`) |
-| ExecutionPolicy error (Windows) | `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser` |
-| Very slow on CPU | Reduce `BATCH_SIZE` in `config.py`, or use a machine with a GPU |
+|---------|---------|
+| `No trained model found` | Run `python train.py --mode tl` first |
+| `ASD model not found` | Run `python train_autism.py` (needs ASD dataset) |
+| `Dataset not found` | Download FER2013 from Kaggle, place in `data/` |
+| `Webcam not opening` | Check `WEBCAM_INDEX = 0` in config.py |
+| `Memory error during GA` | Reduce `GA_POPULATION_SIZE` to 6 |
+| `Slow training on CPU` | Use `--mode cnn` for faster training; TL is slower |
+| `Low accuracy` | Ensure training ran ≥30 epochs; try `--mode tl` |
 
 ---
 
-## 📚 Documentation Index
+## 📁 Outputs Generated
 
-| Document | Contents |
-|----------|----------|
-| [`docs/setup.md`](docs/setup.md) | Detailed step-by-step setup & troubleshooting |
-| [`docs/architecture.md`](docs/architecture.md) | CNN architecture diagram + explanation |
-| [`docs/evaluation.md`](docs/evaluation.md) | Metrics, expected results, confusion matrix |
-| [`docs/improvements.md`](docs/improvements.md) | 8 strategies to boost accuracy |
+After running the full pipeline:
+
+| File | Description |
+|------|-------------|
+| `outputs/training_curves.png` | Accuracy & loss curves |
+| `outputs/confusion_matrix.png` | Per-class prediction matrix |
+| `outputs/ga_accuracy_comparison.png` | Baseline vs GA bar chart |
+| `outputs/ga_fitness_log.csv` | Per-generation fitness data |
+| `outputs/ga_best_params.json` | Best hyperparameters found by GA |
+| `outputs/ga_summary.txt` | Full viva-ready GA summary text |
+| `outputs/asd_confusion_matrix.png` | ASD classifier evaluation |
 
 ---
 
-## 👤 Author
+## 👨‍🎓 Team & Acknowledgements
 
-**Kunal** — B.Tech Final Year Project  
-Real-Time Emotion Recognition & Autism Detection Using CNN-Based Soft Computing Techniques
-# soft_computing_project
+- Dataset: FER2013 (Kaggle) · ASD Facial Dataset (Kaggle)
+- Pre-trained weights: MobileNetV2 on ImageNet (TensorFlow/Keras)
+- Framework: TensorFlow 2.x, OpenCV, Flask
+
+---
+
+*NOTE: This is an academic project. ASD risk estimation is not a medical diagnosis.*

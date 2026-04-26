@@ -1,0 +1,11 @@
+﻿Fixed 9 arrows in train.py
+Fixed 5 arrows in preprocess.py
+Fixed 35 arrows in model.py
+Fixed 7 arrows in config.py
+Fixed 7 arrows in gradcam.py
+Fixed 9 arrows in autism_detector.py
+Fixed 7 arrows in realtime.py
+Fixed 5 arrows in app.py
+Fixed 21 arrows in ga_optimizer.py
+Fixed 7 arrows in train_autism.py
+Total fixed: 112

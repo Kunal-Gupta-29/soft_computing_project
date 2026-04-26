@@ -4,9 +4,9 @@ emotion_tracker.py
 Tracks emotion detections over time and provides visualisation utilities.
 
 Features:
-    • Maintains a timestamped list of emotions (for session history)
-    • Plots a bar chart of emotion frequencies for the current session
-    • Can be called inline during real-time detection and on session end
+    * Maintains a timestamped list of emotions (for session history)
+    * Plots a bar chart of emotion frequencies for the current session
+    * Can be called inline during real-time detection and on session end
 
 Usage:
     from emotion_tracker import EmotionTracker
@@ -50,7 +50,7 @@ class EmotionTracker:
     def __init__(self):
         self.records: list = []
 
-    # ── Public API ────────────────────────────────────────────────────────────
+    # -- Public API ------------------------------------------------------------
 
     def record(self, emotion: str, confidence: float = 1.0) -> None:
         """
@@ -58,8 +58,8 @@ class EmotionTracker:
 
         Parameters
         ----------
-        emotion    : str   – emotion label (e.g. "Happy")
-        confidence : float – model softmax confidence [0, 1]
+        emotion    : str   - emotion label (e.g. "Happy")
+        confidence : float - model softmax confidence [0, 1]
         """
         self.records.append({
             "emotion"   : emotion,
@@ -68,7 +68,7 @@ class EmotionTracker:
         })
 
     def get_counts(self) -> dict:
-        """Return emotion label → count mapping for the current session."""
+        """Return emotion label -> count mapping for the current session."""
         counts = {e: 0 for e in EMOTIONS.values()}
         for r in self.records:
             counts[r["emotion"]] = counts.get(r["emotion"], 0) + 1
@@ -96,8 +96,8 @@ class EmotionTracker:
 
         Parameters
         ----------
-        save_path : str  – full path to save the PNG; defaults to outputs/
-        show      : bool – if True, call plt.show() (only for interactive use)
+        save_path : str  - full path to save the PNG; defaults to outputs/
+        show      : bool - if True, call plt.show() (only for interactive use)
 
         Returns
         -------
@@ -115,7 +115,7 @@ class EmotionTracker:
         fig, axes = plt.subplots(1, 2, figsize=(14, 5))
         fig.patch.set_facecolor("#1E1E2E")
 
-        # ── Bar chart ─────────────────────────────────────────────────────────
+        # -- Bar chart ---------------------------------------------------------
         ax1 = axes[0]
         ax1.set_facecolor("#2A2A3E")
         bars = ax1.bar(labels, values, color=colors, edgecolor="white", linewidth=0.5)
@@ -137,7 +137,7 @@ class EmotionTracker:
         for spine in ax1.spines.values():
             spine.set_edgecolor("#555")
 
-        # ── Pie chart ─────────────────────────────────────────────────────────
+        # -- Pie chart ---------------------------------------------------------
         ax2 = axes[1]
         ax2.set_facecolor("#2A2A3E")
         non_zero_vals   = [v for v in values if v > 0]
@@ -167,7 +167,7 @@ class EmotionTracker:
             plt.show()
         plt.close()
 
-        print(f"[tracker] Emotion history chart saved → {save_path}")
+        print(f"[tracker] Emotion history chart saved -> {save_path}")
         return save_path
 
     def summary_string(self) -> str:
@@ -178,10 +178,10 @@ class EmotionTracker:
             return "No emotions recorded."
         top = sorted(counts.items(), key=lambda x: -x[1])[:3]
         parts = [f"{e}: {c}" for e, c in top if c > 0]
-        return f"Session ({total} frames) — Top: {', '.join(parts)}"
+        return f"Session ({total} frames) -- Top: {', '.join(parts)}"
 
 
-# ─── Quick demo ───────────────────────────────────────────────────────────────
+# --- Quick demo ---------------------------------------------------------------
 
 if __name__ == "__main__":
     import random

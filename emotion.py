@@ -4,10 +4,10 @@ emotion.py
 Main entry-point for the Emotion Recognition & Autism Detection project.
 
 Usage:
-    python emotion.py            → Launches real-time webcam demo
-    python emotion.py --train    → Trains the CNN from scratch
-    python emotion.py --evaluate → Evaluates model on FER2013 test set
-    python emotion.py --web      → Starts Flask web dashboard
+    python emotion.py            -> Launches real-time webcam demo
+    python emotion.py --train    -> Trains the CNN from scratch
+    python emotion.py --evaluate -> Evaluates model on FER2013 test set
+    python emotion.py --web      -> Starts Flask web dashboard
 """
 
 import sys
@@ -19,7 +19,7 @@ def main():
         description=(
             "Real-Time Emotion Recognition & Autism Detection\n"
             "Using CNN-Based Soft Computing Techniques\n"
-            "—— B.Tech Final Year Project ——"
+            "---- B.Tech Final Year Project ----"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

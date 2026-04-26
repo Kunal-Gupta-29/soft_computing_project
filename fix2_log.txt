@@ -1,0 +1,10 @@
+﻿python :   File "<string>", line 26
+At line:1 char:1
++ python -c "
++ ~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (  File "<string>", line 26:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    chr(0x2019): " \,
+                 ^
+SyntaxError: unterminated string literal (detected at line 26)

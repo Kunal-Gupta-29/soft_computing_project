@@ -16,14 +16,14 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Model weights & large files
-# *.h5 and similar are ignored by default, but we explicitly INCLUDE
-# the pre-trained emotion model so others don't need to retrain.
+# GitHub rejects files >100MB unless Git LFS is used.
 *.keras
 *.pkl
 *.pt
 *.pth
-# Allow the project's pre-trained model specifically
-!models/emotion_model.h5
+*.h5
+models/
+!models/.gitkeep
 
 # OS files
 .DS_Store

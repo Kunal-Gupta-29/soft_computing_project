@@ -1,377 +1,715 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Emotion Recognition | Autism Risk Estimator</title>
-  <meta name="description" content="Real-time facial emotion recognition and autism risk estimation dashboard."/>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Emotion & ASD Detection | Soft Computing Dashboard</title>
+  <meta name="description"
+    content="Real-time Emotion Recognition and Autism Detection using CNN and Genetic Algorithm-Based Soft Computing" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
   <style>
     :root {
-      --bg      : #0d0f1a;
-      --panel   : #161826;
-      --border  : #2a2d45;
-      --accent  : #6c63ff;
-      --accent2 : #00cfff;
-      --text    : #e2e8f0;
-      --muted   : #8892b0;
-      --risk-low  : #22c55e;
-      --risk-med  : #f59e0b;
-      --risk-high : #ef4444;
-      --radius  : 14px;
+      --bg-deep:      #080c14;
+      --bg-card:      #0f1623;
+      --bg-card2:     #141d2e;
+      --bg-border:    #1e2d45;
+      --accent-blue:  #3d9cf5;
+      --accent-cyan:  #00d4d8;
+      --accent-green: #22c55e;
+      --accent-red:   #ef4444;
+      --accent-amber: #f59e0b;
+      --accent-purple:#a78bfa;
+      --text-primary: #e2e8f0;
+      --text-secondary:#94a3b8;
+      --text-muted:   #475569;
+      --glow-blue:    rgba(61,156,245,0.15);
+      --glow-green:   rgba(34,197,94,0.15);
+      --glow-red:     rgba(239,68,68,0.18);
     }
-    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
-    body { font-family:"Inter",sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
-    /* ── Header ──────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background grid ─────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(61,156,245,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(61,156,245,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────── */
     header {
-      display:flex; align-items:center; justify-content:space-between;
-      padding:14px 28px;
-      background:linear-gradient(135deg,#1a1c2e,#0d0f1a);
-      border-bottom:1px solid var(--border);
+      position: relative; z-index: 10;
+      background: linear-gradient(135deg, rgba(11,17,32,0.98), rgba(14,22,42,0.98));
+      border-bottom: 1px solid var(--bg-border);
+      padding: 14px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      backdrop-filter: blur(12px);
     }
-    header h1 {
-      font-size:1.15rem; font-weight:700;
-      background:linear-gradient(90deg,var(--accent),var(--accent2));
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .logo-icon {
+      width: 42px; height: 42px; border-radius: 10px;
+      background: linear-gradient(135deg, #1e40af, #3d9cf5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; box-shadow: 0 0 20px rgba(61,156,245,0.3);
+      animation: pulse-glow 3s ease-in-out infinite;
     }
-    .header-right { display:flex; align-items:center; gap:10px; }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(61,156,245,0.3); }
+      50%       { box-shadow: 0 0 35px rgba(61,156,245,0.55); }
+    }
+    h1 { font-size: 16px; font-weight: 700; color: var(--text-primary); letter-spacing: 0.02em; }
+    .subtitle { font-size: 11px; color: var(--text-muted); font-weight: 400; margin-top: 1px; }
+    .header-badges { display: flex; gap: 8px; }
     .badge {
-      font-size:0.70rem; font-weight:600; padding:4px 12px; border-radius:50px;
-      background:rgba(108,99,255,0.15); color:var(--accent);
-      border:1px solid rgba(108,99,255,0.3); letter-spacing:0.5px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
+    .badge-blue  { background: rgba(61,156,245,0.15); color: #3d9cf5; border: 1px solid rgba(61,156,245,0.25); }
+    .badge-green { background: rgba(34,197,94,0.12);  color: #22c55e; border: 1px solid rgba(34,197,94,0.22); }
+    .badge-amber { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.22); }
 
-    /* ── Layout ──────────────────────────────────── */
+    /* ── Status bar ───────────────────────────────────────────────── */
+    .status-bar {
+      position: relative; z-index: 10;
+      background: rgba(11,22,40,0.9);
+      border-bottom: 1px solid var(--bg-border);
+      padding: 6px 28px;
+      display: flex; align-items: center; gap: 20px;
+      font-size: 11px; color: var(--text-muted);
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #22c55e;
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    #model-type-badge { font-family: 'JetBrains Mono', monospace; color: var(--accent-cyan); }
+
+    /* ── Main layout ──────────────────────────────────────────────── */
     main {
-      display:grid;
-      grid-template-columns:1fr 320px;
-      grid-template-rows:auto auto;
-      gap:18px; padding:20px 28px;
-      max-width:1280px; margin:0 auto;
-    }
-    .panel {
-      background:var(--panel); border:1px solid var(--border);
-      border-radius:var(--radius); padding:18px;
-    }
-    .panel-title {
-      font-size:0.72rem; font-weight:600; color:var(--muted);
-      text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;
+      position: relative; z-index: 1;
+      max-width: 1440px; margin: 0 auto;
+      padding: 20px 24px 30px;
+      display: grid;
+      grid-template-columns: 1fr 370px;
+      grid-template-rows: auto auto;
+      gap: 20px;
     }
 
-    /* ── Video panel ─────────────────────────────── */
-    #video-panel { grid-column:1; grid-row:1/3; display:flex; flex-direction:column; gap:12px; }
-
-    #stream-wrapper {
-      position:relative; border-radius:10px; overflow:hidden;
-      border:2px solid var(--border); background:#000; min-height:320px;
+    /* ── Card base ────────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--bg-border);
+      border-radius: 16px;
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
     }
-    #stream-img { width:100%; display:block; }
-
-    /* ── Live / Paused badge on video ────────────── */
-    #status-badge {
-      position:absolute; top:12px; left:12px;
-      display:flex; align-items:center; gap:6px;
-      background:rgba(0,0,0,0.55); padding:4px 10px;
-      border-radius:20px; backdrop-filter:blur(4px);
-      font-size:0.72rem; font-weight:600; letter-spacing:0.4px;
-      transition: all 0.3s;
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(61,156,245,0.4), transparent);
     }
-    #status-dot {
-      width:8px; height:8px; border-radius:50%;
-      background:var(--risk-low);
-      box-shadow:0 0 0 0 rgba(34,197,94,0.4);
-      animation:pulse 1.5s infinite;
+    .card-title {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
     }
-    #status-dot.paused { background:#f59e0b; animation:none; }
-    @keyframes pulse {
-      0%  { box-shadow:0 0 0 0 rgba(34,197,94,0.4); }
-      70% { box-shadow:0 0 0 8px rgba(34,197,94,0); }
-      100%{ box-shadow:0 0 0 0 rgba(34,197,94,0); }
+    .card-title .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent-blue);
     }
 
-    /* ── Paused overlay on video ─────────────────── */
-    #pause-overlay {
-      display:none; position:absolute; inset:0;
-      background:rgba(0,0,0,0.55); backdrop-filter:blur(2px);
-      align-items:center; justify-content:center; flex-direction:column; gap:10px;
-      border-radius:8px;
+    /* ── Video panel ──────────────────────────────────────────────── */
+    #video-card {
+      grid-row: 1 / 2;
     }
-    #pause-overlay.active { display:flex; }
-    #pause-overlay .icon { font-size:3rem; }
-    #pause-overlay p { color:#fff; font-size:1rem; font-weight:600; }
+    .video-wrapper {
+      position: relative;
+      background: #000;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--bg-border);
+    }
+    #webcam-feed {
+      width: 100%;
+      display: block;
+      min-height: 360px;
+      object-fit: cover;
+    }
+    .video-controls {
+      display: flex; gap: 10px; margin-top: 12px;
+    }
+    .btn {
+      flex: 1; padding: 10px 0;
+      border: none; border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.03em;
+    }
+    #btn-pause  { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+    #btn-resume { background: rgba(34,197,94,0.15);  color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+    #btn-reset  { background: rgba(239,68,68,0.12);  color: #ef4444; border: 1px solid rgba(239,68,68,0.25); }
+    .btn:hover  { transform: translateY(-1px); filter: brightness(1.2); }
+    .btn:active { transform: translateY(0); }
 
-    /* ── Controls bar ────────────────────────────── */
-    #controls {
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    /* ── Grad-CAM panel ───────────────────────────────────────────── */
+    #gradcam-card {
+      grid-row: 2 / 3;
     }
-    button {
-      cursor:pointer; font-family:inherit; font-weight:600;
-      font-size:0.82rem; border-radius:8px; border:none;
-      padding:9px 18px; transition:all 0.2s;
+    .gradcam-wrapper {
+      display: flex; gap: 16px; align-items: flex-start;
     }
-    #btn-pause {
-      background:rgba(108,99,255,0.15); color:var(--accent);
-      border:1px solid rgba(108,99,255,0.35);
+    .gradcam-img-box {
+      width: 160px; flex-shrink: 0;
+      background: #000; border-radius: 8px;
+      border: 1px solid var(--bg-border);
+      overflow: hidden;
     }
-    #btn-pause:hover { background:rgba(108,99,255,0.28); }
-    #btn-pause.paused {
-      background:rgba(34,197,94,0.15); color:var(--risk-low);
-      border:1px solid rgba(34,197,94,0.35);
+    #gradcam-img {
+      width: 160px; height: 160px;
+      object-fit: cover; display: block;
     }
-    #btn-reset {
-      background:rgba(239,68,68,0.1); color:#f87171;
-      border:1px solid rgba(239,68,68,0.3);
+    .gradcam-explain {
+      flex: 1;
+      font-size: 12px; color: var(--text-secondary); line-height: 1.7;
     }
-    #btn-reset:hover { background:rgba(239,68,68,0.2); }
+    .gradcam-explain h3 { font-size: 13px; color: var(--text-primary); margin-bottom: 6px; }
+    #btn-gradcam {
+      margin-top: 10px; padding: 7px 14px;
+      background: rgba(167,139,250,0.15); color: var(--accent-purple);
+      border: 1px solid rgba(167,139,250,0.3); border-radius: 7px;
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      transition: all 0.2s;
+    }
+    #btn-gradcam:hover { filter: brightness(1.25); }
 
-    /* ── Emotion display strip ───────────────────── */
-    #emotion-display {
-      display:flex; align-items:center; gap:14px;
-      padding:12px 16px;
-      background:rgba(108,99,255,0.07);
-      border:1px solid rgba(108,99,255,0.18); border-radius:10px;
+    /* ── Right sidebar panel ──────────────────────────────────────── */
+    .sidebar {
+      grid-column: 2;
+      grid-row: 1 / 3;
+      display: flex; flex-direction: column; gap: 16px;
     }
-    #emotion-label { font-size:1.45rem; font-weight:700; min-width:105px; }
-    #conf-bar-wrap { flex:1; background:rgba(255,255,255,0.06); border-radius:6px; height:9px; overflow:hidden; }
+
+    /* ── Current emotion big display ──────────────────────────────── */
+    #emotion-card {
+      text-align: center;
+    }
+    #emotion-label {
+      font-size: 36px; font-weight: 800;
+      background: linear-gradient(135deg, #3d9cf5, #00d4d8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+      transition: all 0.4s;
+    }
+    #emotion-conf {
+      font-size: 13px; color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .conf-bar-wrap {
+      margin-top: 10px;
+      height: 6px; background: var(--bg-border);
+      border-radius: 3px; overflow: hidden;
+    }
     #conf-bar {
-      height:100%; width:0%;
-      background:linear-gradient(90deg,var(--accent),var(--accent2));
-      border-radius:6px; transition:width 0.4s ease;
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #3d9cf5, #00d4d8);
+      border-radius: 3px;
+      transition: width 0.5s ease;
     }
-    #conf-pct { font-size:0.82rem; color:var(--muted); min-width:46px; text-align:right; }
 
-    /* ── Right column ────────────────────────────── */
-    #risk-panel  { grid-column:2; grid-row:1; }
-    #chart-panel { grid-column:2; grid-row:2; }
-
-    /* ── Risk card ───────────────────────────────── */
-    #risk-level { font-size:2.4rem; font-weight:700; margin:6px 0 4px; transition:color 0.4s; }
-    #risk-reason { color:var(--muted); font-size:0.80rem; margin-bottom:14px; min-height:32px; line-height:1.5; }
-    .metric-row {
-      display:flex; justify-content:space-between;
-      padding:7px 0; border-bottom:1px solid var(--border); font-size:0.82rem;
+    /* ── ASD ML card ──────────────────────────────────────────────── */
+    #asd-ml-card {
+      border-color: var(--bg-border);
+      transition: border-color 0.4s;
     }
-    .metric-row:last-child { border-bottom:none; }
-    .metric-key { color:var(--muted); }
-    .metric-val { font-weight:600; }
-    .risk-low  { color:var(--risk-low); }
-    .risk-med  { color:var(--risk-med); }
-    .risk-high { color:var(--risk-high); }
+    #asd-ml-card.autistic   { border-color: rgba(239,68,68,0.4); }
+    #asd-ml-card.non-autistic{ border-color: rgba(34,197,94,0.4); }
+    #asd-ml-card.uncertain  { border-color: rgba(245,158,11,0.4); }
 
-    /* ── Chart ───────────────────────────────────── */
-    #emotionChart { max-height:230px; }
+    .asd-result-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+    }
+    .asd-icon {
+      width: 46px; height: 46px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+      background: var(--bg-card2);
+      transition: background 0.4s;
+    }
+    #asd-label {
+      font-size: 20px; font-weight: 700;
+      color: var(--text-primary);
+      transition: color 0.4s;
+    }
+    #asd-conf-txt {
+      font-size: 12px; color: var(--text-secondary); margin-top: 2px;
+    }
+    .asd-conf-bar-wrap {
+      height: 5px; background: var(--bg-border);
+      border-radius: 3px; overflow: hidden;
+    }
+    #asd-conf-bar {
+      height: 100%; width: 0%;
+      background: var(--accent-green);
+      border-radius: 3px; transition: width 0.5s, background 0.4s;
+    }
+    .asd-note {
+      font-size: 10px; color: var(--text-muted); margin-top: 6px;
+      line-height: 1.5;
+    }
 
-    /* ── Footer ──────────────────────────────────── */
-    footer {
-      text-align:center; padding:14px; color:var(--muted);
-      font-size:0.72rem; border-top:1px solid var(--border); margin-top:4px;
+    /* ── Behavioral risk card ─────────────────────────────────────── */
+    #risk-card { transition: border-color 0.4s; }
+    #risk-card.low   { border-color: rgba(34,197,94,0.4); }
+    #risk-card.medium{ border-color: rgba(245,158,11,0.4); }
+    #risk-card.high  { border-color: rgba(239,68,68,0.4); }
+
+    .risk-row { display: flex; align-items: center; gap: 10px; }
+    #risk-badge {
+      padding: 5px 14px; border-radius: 20px;
+      font-size: 15px; font-weight: 700;
+      letter-spacing: 0.04em;
+      transition: all 0.4s;
+    }
+    #risk-badge.low    { background: rgba(34,197,94,0.15);  color: #22c55e; }
+    #risk-badge.medium { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    #risk-badge.high   { background: rgba(239,68,68,0.15);  color: #ef4444; }
+
+    #risk-reason {
+      font-size: 11px; color: var(--text-secondary);
+      margin-top: 8px; line-height: 1.5;
+    }
+
+    .metric-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px; margin-top: 10px;
+    }
+    .metric-pill {
+      background: var(--bg-card2);
+      border: 1px solid var(--bg-border);
+      border-radius: 8px; padding: 8px 10px;
+    }
+    .metric-pill-label { font-size: 10px; color: var(--text-muted); }
+    .metric-pill-value {
+      font-size: 16px; font-weight: 700;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── Emotion distribution bar chart ───────────────────────────── */
+    #distribution-card { }
+    .emo-bar-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 7px;
+    }
+    .emo-bar-label { width: 65px; font-size: 11px; color: var(--text-secondary); flex-shrink: 0; }
+    .emo-bar-track {
+      flex: 1; height: 8px; background: var(--bg-card2);
+      border-radius: 4px; overflow: hidden;
+    }
+    .emo-bar-fill {
+      height: 100%; border-radius: 4px;
+      transition: width 0.6s ease;
+      min-width: 2px;
+    }
+    .emo-bar-count {
+      width: 30px; text-align: right;
+      font-size: 11px; color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Emotion colours */
+    .fill-angry    { background: linear-gradient(90deg, #ef4444, #dc2626); }
+    .fill-disgust  { background: linear-gradient(90deg, #f97316, #ea580c); }
+    .fill-fear     { background: linear-gradient(90deg, #eab308, #ca8a04); }
+    .fill-happy    { background: linear-gradient(90deg, #22c55e, #16a34a); }
+    .fill-neutral  { background: linear-gradient(90deg, #94a3b8, #64748b); }
+    .fill-sad      { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+    .fill-surprise { background: linear-gradient(90deg, #a78bfa, #7c3aed); }
+
+    /* ── Info / session stats ─────────────────────────────────────── */
+    #session-card {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .stat-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px;
+    }
+    .stat-key  { color: var(--text-muted); }
+    .stat-val  { color: var(--text-primary); font-weight: 600;
+                 font-family: 'JetBrains Mono', monospace; }
+    .stat-val.green { color: var(--accent-green); }
+
+    /* ── Scrollbar ────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--bg-deep); }
+    ::-webkit-scrollbar-thumb { background: var(--bg-border); border-radius: 3px; }
+
+    /* ── Responsive ───────────────────────────────────────────────── */
+    @media (max-width: 1100px) {
+      main { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+      .sidebar { grid-column: 1; grid-row: 3; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      #emotion-card { grid-column: 1 / 3; }
     }
   </style>
 </head>
+
 <body>
+  <!-- ── Header ─────────────────────────────────────────────────────── -->
+  <header>
+    <div class="header-left">
+      <div class="logo-icon">🧠</div>
+      <div>
+        <h1>Emotion & ASD Detection System</h1>
+        <div class="subtitle">CNN · Transfer Learning · Genetic Algorithm · Soft Computing</div>
+      </div>
+    </div>
+    <div class="header-badges">
+      <span class="badge badge-blue">FER2013</span>
+      <span class="badge badge-green">MobileNetV2</span>
+      <span class="badge badge-amber">GA Optimized</span>
+    </div>
+  </header>
 
-<header>
-  <h1>🧠 Emotion Recognition &amp; Autism Risk Estimator</h1>
-  <div class="header-right">
-    <span class="badge" id="header-badge">● LIVE</span>
+  <!-- ── Status bar ─────────────────────────────────────────────────── -->
+  <div class="status-bar">
+    <div class="status-dot" id="live-dot"></div>
+    <span id="live-txt">Live Stream Active</span>
+    <span>·</span>
+    <span>Model: <span id="model-type-badge">—</span></span>
+    <span>·</span>
+    <span>Frames: <span id="frame-count-txt">0</span></span>
+    <span>·</span>
+    <span>ASD Model: <span id="asd-model-status" style="color: var(--text-muted)">Checking...</span></span>
   </div>
-</header>
 
-<main>
+  <!-- ── Main layout ────────────────────────────────────────────────── -->
+  <main>
 
-  <!-- ── Video Feed ───────────────────────────────────────── -->
-  <section class="panel" id="video-panel">
-    <p class="panel-title">Live Camera Feed</p>
+    <!-- ─── VIDEO CARD ──────────────────────────────────────────────── -->
+    <div class="card" id="video-card">
+      <div class="card-title"><div class="dot"></div>Live Webcam Feed</div>
+      <div class="video-wrapper">
+        <img id="webcam-feed" src="/video_feed" alt="Webcam feed" />
+      </div>
+      <div class="video-controls">
+        <button class="btn" id="btn-pause"  onclick="pauseStream()">⏸ Pause</button>
+        <button class="btn" id="btn-resume" onclick="resumeStream()">▶ Resume</button>
+        <button class="btn" id="btn-reset"  onclick="resetStats()">↺ Reset Stats</button>
+      </div>
+    </div>
 
-    <div id="stream-wrapper">
-      <!-- Live / Paused badge -->
-      <div id="status-badge">
-        <div id="status-dot"></div>
-        <span id="status-text">LIVE</span>
+    <!-- ─── GRAD-CAM CARD ────────────────────────────────────────────── -->
+    <div class="card" id="gradcam-card">
+      <div class="card-title"><div class="dot" style="background:var(--accent-purple)"></div>Grad-CAM Explainability</div>
+      <div class="gradcam-wrapper">
+        <div class="gradcam-img-box">
+          <img id="gradcam-img" src="/gradcam" alt="Grad-CAM heatmap" />
+        </div>
+        <div class="gradcam-explain">
+          <h3>Why did the model predict this emotion?</h3>
+          Gradient-weighted Class Activation Mapping highlights the facial regions
+          the CNN focuses on — hot (red/yellow) areas are most influential for the
+          current emotion prediction. Shows model interpretability / explainability.
+          <br /><br />
+          <button id="btn-gradcam" onclick="refreshGradcam()">🔥 Capture Grad-CAM</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── RIGHT SIDEBAR ────────────────────────────────────────────── -->
+    <div class="sidebar">
+
+      <!-- Current Emotion -->
+      <div class="card" id="emotion-card">
+        <div class="card-title"><div class="dot" style="background:var(--accent-cyan)"></div>Current Emotion</div>
+        <div id="emotion-label">—</div>
+        <div id="emotion-conf">Confidence: —%</div>
+        <div class="conf-bar-wrap">
+          <div id="conf-bar"></div>
+        </div>
       </div>
 
-      <!-- Pause overlay -->
-      <div id="pause-overlay">
-        <div class="icon">⏸</div>
-        <p>Webcam Paused — Dashboard Still Tracking</p>
+      <!-- ASD ML Card -->
+      <div class="card" id="asd-ml-card">
+        <div class="card-title"><div class="dot" style="background:#ef4444"></div>ASD Classifier (ML Model)</div>
+        <div class="asd-result-row">
+          <div class="asd-icon" id="asd-icon">🔍</div>
+          <div>
+            <div id="asd-label">Loading...</div>
+            <div id="asd-conf-txt">Confidence: —%</div>
+          </div>
+        </div>
+        <div class="asd-conf-bar-wrap">
+          <div id="asd-conf-bar"></div>
+        </div>
+        <div class="asd-note" id="asd-note">
+          MobileNetV2 binary classifier · Autistic / Non-Autistic
+        </div>
       </div>
 
-      <img id="stream-img" src="/video_feed" alt="Live webcam feed with emotion annotations"/>
-    </div>
+      <!-- Behavioral Risk Card -->
+      <div class="card" id="risk-card">
+        <div class="card-title"><div class="dot" style="background:var(--accent-amber)"></div>Behavioral Risk Pattern</div>
+        <div class="risk-row">
+          <div id="risk-badge" class="low">Low</div>
+          <span style="font-size:11px;color:var(--text-muted)">Sliding-window heuristic</span>
+        </div>
+        <div id="risk-reason">Collecting data...</div>
+        <div class="metric-grid">
+          <div class="metric-pill">
+            <div class="metric-pill-label">Variety</div>
+            <div class="metric-pill-value" id="m-variety">—</div>
+          </div>
+          <div class="metric-pill">
+            <div class="metric-pill-label">Repetitive</div>
+            <div class="metric-pill-value" id="m-repeat">—</div>
+          </div>
+          <div class="metric-pill">
+            <div class="metric-pill-label">Neutral+Sad</div>
+            <div class="metric-pill-value" id="m-flat">—</div>
+          </div>
+          <div class="metric-pill">
+            <div class="metric-pill-label">Window</div>
+            <div class="metric-pill-value" id="m-window">—</div>
+          </div>
+        </div>
+      </div>
 
-    <!-- Controls -->
-    <div id="controls">
-      <button id="btn-pause" onclick="togglePause()">⏸ Pause Webcam</button>
-      <button id="btn-reset" onclick="resetSession()">⟳ Reset Session</button>
-    </div>
+      <!-- Emotion Distribution -->
+      <div class="card" id="distribution-card">
+        <div class="card-title"><div class="dot" style="background:var(--accent-green)"></div>Emotion Distribution</div>
+        <div id="emo-bars">
+          <div class="emo-bar-row" id="bar-angry">
+            <div class="emo-bar-label">Angry</div>
+            <div class="emo-bar-track"><div class="emo-bar-fill fill-angry" style="width:0%"></div></div>
+            <div class="emo-bar-count">0</div>
+          </div>
+          <div class="emo-bar-row" id="bar-disgust">
+            <div class="emo-bar-label">Disgust</div>
+            <div class="emo-bar-track"><div class="emo-bar-fill fill-disgust" style="width:0%"></div></div>
+            <div class="emo-bar-count">0</div>
+          </div>
+          <div class="emo-bar-row" id="bar-fear">
+            <div class="emo-bar-label">Fear</div>
+            <div class="emo-bar-track"><div class="emo-bar-fill fill-fear" style="width:0%"></div></div>
+            <div class="emo-bar-count">0</div>
+          </div>
+          <div class="emo-bar-row" id="bar-happy">
+            <div class="emo-bar-label">Happy</div>
+            <div class="emo-bar-track"><div class="emo-bar-fill fill-happy" style="width:0%"></div></div>
+            <div class="emo-bar-count">0</div>
+          </div>
+          <div class="emo-bar-row" id="bar-neutral">
+            <div class="emo-bar-label">Neutral</div>
+            <div class="emo-bar-track"><div class="emo-bar-fill fill-neutral" style="width:0%"></div></div>
+            <div class="emo-bar-count">0</div>
+          </div>
+          <div class="emo-bar-row" id="bar-sad">
+            <div class="emo-bar-label">Sad</div>
+            <div class="emo-bar-track"><div class="emo-bar-fill fill-sad" style="width:0%"></div></div>
+            <div class="emo-bar-count">0</div>
+          </div>
+          <div class="emo-bar-row" id="bar-surprise">
+            <div class="emo-bar-label">Surprise</div>
+            <div class="emo-bar-track"><div class="emo-bar-fill fill-surprise" style="width:0%"></div></div>
+            <div class="emo-bar-count">0</div>
+          </div>
+        </div>
+      </div>
 
-    <!-- Emotion label strip -->
-    <div id="emotion-display">
-      <span id="emotion-label">—</span>
-      <div id="conf-bar-wrap"><div id="conf-bar"></div></div>
-      <span id="conf-pct">—</span>
-    </div>
-  </section>
+      <!-- Session Stats -->
+      <div class="card" id="session-card">
+        <div class="card-title"><div class="dot" style="background:var(--text-muted)"></div>Session Info</div>
+        <div class="stat-row">
+          <span class="stat-key">Total Frames</span>
+          <span class="stat-val" id="s-frames">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Emotion Model</span>
+          <span class="stat-val" id="s-model">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">ASD Model</span>
+          <span class="stat-val" id="s-asd">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Stream Status</span>
+          <span class="stat-val green" id="s-status">Live</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Dominant Emotion</span>
+          <span class="stat-val" id="s-dominant">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-key">Techniques</span>
+          <span class="stat-val" style="font-size:10px;color:var(--text-muted)">CNN · TL · GA · CLAHE</span>
+        </div>
+      </div>
 
-  <!-- ── Autism Risk Panel ────────────────────────────────── -->
-  <section class="panel" id="risk-panel">
-    <p class="panel-title">Autism Risk Estimation</p>
-    <div id="risk-level" class="risk-low">Low</div>
-    <p id="risk-reason">Collecting data...</p>
+    </div><!-- end sidebar -->
+  </main>
 
-    <div class="metric-row">
-      <span class="metric-key">Emotional Variation</span>
-      <span class="metric-val" id="m-variation">—</span>
-    </div>
-    <div class="metric-row">
-      <span class="metric-key">Neutral Dominance</span>
-      <span class="metric-val" id="m-neutral">—</span>
-    </div>
-    <div class="metric-row">
-      <span class="metric-key">Repetitive Pattern</span>
-      <span class="metric-val" id="m-repeat">—</span>
-    </div>
-    <div class="metric-row">
-      <span class="metric-key">Dominant Emotion</span>
-      <span class="metric-val" id="m-dominant">—</span>
-    </div>
-    <div class="metric-row">
-      <span class="metric-key">Frames Processed</span>
-      <span class="metric-val" id="m-frames">0</span>
-    </div>
-  </section>
+  <!-- ── JavaScript ─────────────────────────────────────────────────── -->
+  <script>
+    const EMOTION_COLORS_JS = {
+      "Angry":   "#ef4444", "Disgust": "#f97316", "Fear":  "#eab308",
+      "Happy":   "#22c55e", "Neutral": "#94a3b8", "Sad":   "#3b82f6",
+      "Surprise":"#a78bfa"
+    };
+    const EMOTION_KEYS = ["Angry","Disgust","Fear","Happy","Neutral","Sad","Surprise"];
 
-  <!-- ── Emotion Chart ────────────────────────────────────── -->
-  <section class="panel" id="chart-panel">
-    <p class="panel-title">Emotion Distribution (Session)</p>
-    <canvas id="emotionChart" role="img" aria-label="Emotion frequency bar chart"></canvas>
-  </section>
+    let paused = false;
 
-</main>
+    // ── Fetch stats every 600ms ────────────────────────────────────
+    async function updateStats() {
+      try {
+        const r = await fetch("/stats");
+        const d = await r.json();
 
-<footer>
-  Real-Time Emotion Recognition &amp; Autism Detection · B.Tech Final Year Project · CNN + OpenCV + Flask
-</footer>
+        // ── Emotion label ────────────────────────────────────────
+        const el = document.getElementById("emotion-label");
+        const ec = d.emotion || "—";
+        el.textContent = ec;
+        el.style.background = ec !== "—"
+          ? `linear-gradient(135deg, ${EMOTION_COLORS_JS[ec] || "#3d9cf5"}, #00d4d8)`
+          : "linear-gradient(135deg, #3d9cf5, #00d4d8)";
+        el.style.webkitBackgroundClip = "text";
+        el.style.webkitTextFillColor  = "transparent";
+        el.style.backgroundClip       = "text";
 
-<script>
-  // ─── State ─────────────────────────────────────────────────────────────────
-  let isPaused = false;
+        const conf = d.confidence || 0;
+        document.getElementById("emotion-conf").textContent = `Confidence: ${conf}%`;
+        document.getElementById("conf-bar").style.width = `${conf}%`;
 
-  // ─── Chart ─────────────────────────────────────────────────────────────────
-  const EMOTIONS = ["Angry","Disgust","Fear","Happy","Neutral","Sad","Surprise"];
-  const COLORS   = ["#EF5350","#FF7043","#FFA726","#66BB6A","#90A4AE","#42A5F5","#AB47BC"];
+        // ── ASD ML ────────────────────────────────────────────────
+        const asdLabel   = d.asd_label    || "—";
+        const asdConf    = d.asd_confidence || 0;
+        const asdAvail   = d.asd_available;
+        document.getElementById("asd-label").textContent    = asdLabel;
+        document.getElementById("asd-conf-txt").textContent = `Confidence: ${asdConf}%`;
+        document.getElementById("asd-conf-bar").style.width = `${asdConf}%`;
 
-  const ctx = document.getElementById("emotionChart").getContext("2d");
-  const chart = new Chart(ctx, {
-    type:"bar",
-    data:{
-      labels: EMOTIONS,
-      datasets:[{
-        label:"Detections",
-        data: new Array(7).fill(0),
-        backgroundColor: COLORS.map(c => c + "CC"),
-        borderColor:     COLORS,
-        borderWidth:1.5,
-        borderRadius:5,
-      }]
-    },
-    options:{
-      responsive:true,
-      animation:{ duration:400 },
-      plugins:{ legend:{ display:false } },
-      scales:{
-        x:{ ticks:{ color:"#8892b0", font:{ size:10 } }, grid:{ color:"#2a2d45" } },
-        y:{ ticks:{ color:"#8892b0" }, grid:{ color:"#2a2d45" }, beginAtZero:true },
+        const asdCard = document.getElementById("asd-ml-card");
+        const asdBar  = document.getElementById("asd-conf-bar");
+        const asdIcon = document.getElementById("asd-icon");
+        asdCard.className = "card";
+        if (asdLabel === "Autistic") {
+          asdCard.classList.add("autistic");
+          asdBar.style.background = "#ef4444";
+          asdIcon.textContent = "⚠️";
+        } else if (asdLabel === "Non-Autistic") {
+          asdCard.classList.add("non-autistic");
+          asdBar.style.background = "#22c55e";
+          asdIcon.textContent = "✅";
+        } else {
+          asdCard.classList.add("uncertain");
+          asdBar.style.background = "#f59e0b";
+          asdIcon.textContent = "🔍";
+        }
+
+        // Model status
+        const asdStatusEl = document.getElementById("asd-model-status");
+        asdStatusEl.textContent = asdAvail ? "Ready ✓" : "Not trained";
+        asdStatusEl.style.color = asdAvail ? "#22c55e" : "#ef4444";
+        document.getElementById("s-asd").textContent = asdAvail ? "Trained ✓" : "Run train_autism.py";
+
+        // ── ASD note ──────────────────────────────────────────────
+        if (!asdAvail) {
+          document.getElementById("asd-note").textContent =
+            "⚠ Run:  python train_autism.py  to enable ML-based ASD detection.";
+        }
+
+        // ── Behavioral risk ───────────────────────────────────────
+        const risk = (d.risk || "Low").toLowerCase();
+        const riskBadge = document.getElementById("risk-badge");
+        riskBadge.textContent   = d.risk || "Low";
+        riskBadge.className     = `low medium high`.split(" ").includes(risk) ? risk : "low";
+        document.getElementById("risk-reason").textContent = d.reason || "—";
+
+        const riskCard = document.getElementById("risk-card");
+        riskCard.className = "card " + risk;
+
+        const m = d.metrics || {};
+        document.getElementById("m-variety").textContent = m.variation_pct != null ? `${m.variation_pct}%` : "—";
+        document.getElementById("m-repeat").textContent  = m.repeat_ratio  != null ? `${m.repeat_ratio}%`  : "—";
+        document.getElementById("m-flat").textContent    = m.neutral_ratio  != null ? `${m.neutral_ratio}%` : "—";
+        document.getElementById("m-window").textContent  = m.window_size    != null ? m.window_size         : "—";
+
+        // ── Emotion distribution bars ─────────────────────────────
+        const counts = d.emotion_counts || {};
+        const totalCounts = Object.values(counts).reduce((a,b) => a+b, 0) || 1;
+        let maxEmo = "—", maxVal = 0;
+        EMOTION_KEYS.forEach(emo => {
+          const cnt = counts[emo] || 0;
+          const pct = Math.round((cnt / totalCounts) * 100);
+          const rowId = "bar-" + emo.toLowerCase();
+          const row   = document.getElementById(rowId);
+          if (row) {
+            row.querySelector(".emo-bar-fill").style.width = pct + "%";
+            row.querySelector(".emo-bar-count").textContent = cnt;
+          }
+          if (cnt > maxVal) { maxVal = cnt; maxEmo = emo; }
+        });
+        document.getElementById("s-dominant").textContent = maxEmo;
+
+        // ── Session stats ─────────────────────────────────────────
+        document.getElementById("s-frames").textContent = d.total_frames || 0;
+        document.getElementById("frame-count-txt").textContent = d.total_frames || 0;
+        document.getElementById("model-type-badge").textContent = d.model_type || "—";
+        document.getElementById("s-model").textContent          = d.model_type || "—";
+
+        paused = d.paused;
+        const statusEl = document.getElementById("s-status");
+        statusEl.textContent = paused ? "Paused" : "Live";
+        statusEl.className   = paused ? "stat-val" : "stat-val green";
+        document.getElementById("live-txt").textContent = paused ? "Stream Paused" : "Live Stream Active";
+
+      } catch (e) {
+        console.warn("[stats] Fetch error:", e);
       }
     }
-  });
 
-  // ─── Pause / Resume ────────────────────────────────────────────────────────
-  async function togglePause() {
-    const btn    = document.getElementById("btn-pause");
-    const dot    = document.getElementById("status-dot");
-    const stxt   = document.getElementById("status-text");
-    const overlay= document.getElementById("pause-overlay");
-    const badge  = document.getElementById("header-badge");
+    // ── Controls ─────────────────────────────────────────────────
+    function pauseStream()  { fetch("/pause");  }
+    function resumeStream() { fetch("/resume"); }
+    function resetStats()   { fetch("/reset");  }
 
-    if (!isPaused) {
-      await fetch("/pause");
-      isPaused = true;
-      btn.textContent = "▶ Resume Webcam";
-      btn.classList.add("paused");
-      dot.classList.add("paused");
-      stxt.textContent = "PAUSED";
-      overlay.classList.add("active");
-      badge.textContent = "⏸ PAUSED";
-      badge.style.color = "#f59e0b";
-    } else {
-      await fetch("/resume");
-      isPaused = false;
-      btn.textContent = "⏸ Pause Webcam";
-      btn.classList.remove("paused");
-      dot.classList.remove("paused");
-      stxt.textContent = "LIVE";
-      overlay.classList.remove("active");
-      badge.textContent = "● LIVE";
-      badge.style.color = "";
+    // ── Grad-CAM refresh ─────────────────────────────────────────
+    function refreshGradcam() {
+      const img = document.getElementById("gradcam-img");
+      img.src = "/gradcam?" + Date.now();
     }
-  }
 
-  // ─── Reset ─────────────────────────────────────────────────────────────────
-  async function resetSession() {
-    await fetch("/reset");
-    chart.data.datasets[0].data = new Array(7).fill(0);
-    chart.update();
-    document.getElementById("risk-level").textContent  = "Low";
-    document.getElementById("risk-reason").textContent = "Session reset.";
-    document.getElementById("m-frames").textContent    = "0";
-    document.getElementById("emotion-label").textContent = "—";
-    document.getElementById("conf-pct").textContent = "—";
-    document.getElementById("conf-bar").style.width = "0%";
-  }
+    // ── Auto-refresh Grad-CAM every 3s ───────────────────────────
+    setInterval(refreshGradcam, 3000);
 
-  // ─── Poll /stats every 700ms (always runs, even when paused) ───────────────
-  const RISK_CLASS = { Low:"risk-low", Medium:"risk-med", High:"risk-high" };
-
-  async function pollStats() {
-    try {
-      const res  = await fetch("/stats");
-      const data = await res.json();
-
-      // Only update live emotion when not paused
-      if (!data.paused) {
-        document.getElementById("emotion-label").textContent = data.emotion;
-        document.getElementById("conf-pct").textContent = data.confidence + "%";
-        document.getElementById("conf-bar").style.width = data.confidence + "%";
-      }
-
-      // Autism risk — always update
-      const riskEl = document.getElementById("risk-level");
-      riskEl.textContent = data.risk;
-      riskEl.className   = RISK_CLASS[data.risk] || "risk-low";
-      document.getElementById("risk-reason").textContent = data.reason;
-
-      // Metrics — always update
-      const m = data.metrics || {};
-      document.getElementById("m-variation").textContent = m.variation_pct  != null ? m.variation_pct  + "%" : "—";
-      document.getElementById("m-neutral").textContent   = m.neutral_ratio   != null ? m.neutral_ratio  + "%" : "—";
-      document.getElementById("m-repeat").textContent    = m.repeat_ratio    != null ? m.repeat_ratio   + "%" : "—";
-      document.getElementById("m-dominant").textContent  = m.dominant_emotion ?? "—";
-      document.getElementById("m-frames").textContent    = data.total_frames ?? 0;
-
-      // Chart — always update
-      const counts = data.emotion_counts || {};
-      chart.data.datasets[0].data = EMOTIONS.map(e => counts[e] || 0);
-      chart.update("none");
-
-    } catch(e) { /* server not ready */ }
-  }
-
-  setInterval(pollStats, 700);
-  pollStats();
-</script>
+    // ── Start polling ─────────────────────────────────────────────
+    updateStats();
+    setInterval(updateStats, 600);
+  </script>
 </body>
 </html>
