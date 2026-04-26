@@ -1,7 +1,7 @@
 # Optimized Real-Time Emotion Recognition and Autism Detection
 ### CNN + Genetic Algorithm-Based Soft Computing
 
-> **B.Tech Final Year Project** | Soft Computing | Deep Learning | Transfer Learning
+> **B.Tech 2nd Year Project** | Soft Computing | Deep Learning | Transfer Learning
 
 ---
 
@@ -115,20 +115,19 @@ soft_computing_project/
 
 ## 📦 Dataset Setup
 
-### 1. FER2013 (Emotion Recognition)
-Download from Kaggle:
-```
-https://www.kaggle.com/datasets/msambare/fer2013
-```
-Extract so your folder looks like:
-```
-data/train/angry/      data/test/angry/
-data/train/disgust/    data/test/disgust/
-data/train/fear/       data/test/fear/
-data/train/happy/      data/test/happy/
-data/train/neutral/    data/test/neutral/
-data/train/sad/        data/test/sad/
-data/train/surprise/   data/test/surprise/
+### 1. Unified Emotion Dataset (FER2013 + RAF-DB)
+For maximum accuracy, this project uses a natively fused dataset.
+
+**Part A: FER2013**
+1. Download from Kaggle: `https://www.kaggle.com/datasets/msambare/fer2013`
+2. Extract the folder directly into your project so you have `data/train/` and `data/test/` containing the 7 emotion subfolders.
+
+**Part B: RAF-DB**
+1. Download RAF-DB from Kaggle (Search: "RAF-DB dataset").
+2. Extract the dataset to your Desktop.
+3. Run the automated merge script to securely inject the diverse RAF-DB poses into your FER2013 folders:
+```bash
+python merge_datasets.py
 ```
 
 ### 2. ASD Dataset (Autism Detection — Optional)
@@ -403,7 +402,7 @@ After running the full pipeline:
 
 ## 👨‍🎓 Team & Acknowledgements
 
-- Dataset: FER2013 (Kaggle) · ASD Facial Dataset (Kaggle)
+- Dataset: FER2013 (Kaggle) · RAF-DB (Real-world Affective Faces) · ASD Facial Dataset (Kaggle)
 - Pre-trained weights: MobileNetV2 on ImageNet (TensorFlow/Keras)
 - Framework: TensorFlow 2.x, OpenCV, Flask
 
