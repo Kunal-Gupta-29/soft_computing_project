@@ -21,9 +21,6 @@ __pycache__/
 *.pkl
 *.pt
 *.pth
-*.h5
-models/
-!models/.gitkeep
 
 # OS files
 .DS_Store
