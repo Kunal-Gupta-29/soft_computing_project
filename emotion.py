@@ -19,7 +19,7 @@ def main():
         description=(
             "Real-Time Emotion Recognition & Autism Detection\n"
             "Using CNN-Based Soft Computing Techniques\n"
-            "---- B.Tech Final Year Project ----"
+            "---- B.Tech 2nd Year Project ----"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

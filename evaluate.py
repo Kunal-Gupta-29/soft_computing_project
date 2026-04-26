@@ -26,7 +26,7 @@ from sklearn.metrics import (
 )
 from tensorflow.keras.models import load_model
 
-from config import MODEL_PATH, OUTPUT_DIR, EMOTIONS, FER_CSV_PATH
+from config import MODEL_PATH, MODEL_TL_PATH, USE_TRANSFER_LEARNING, OUTPUT_DIR, EMOTIONS, FER_CSV_PATH
 from preprocess import load_fer2013, _detect_format, get_folder_generators
 
 
@@ -35,9 +35,11 @@ from preprocess import load_fer2013, _detect_format, get_folder_generators
 def evaluate():
     """Load saved model, run on test set, print metrics, save confusion matrix."""
 
-    if not os.path.exists(MODEL_PATH):
-        print(f"[ERROR] No trained model found at: {MODEL_PATH}")
-        print("        Please run  python train.py  first.")
+    active_model_path = MODEL_TL_PATH if USE_TRANSFER_LEARNING else MODEL_PATH
+
+    if not os.path.exists(active_model_path):
+        print(f"[ERROR] No trained model found at: {active_model_path}")
+        print("        Please run  python train.py --mode tl  first.")
         return
 
     try:
@@ -51,8 +53,8 @@ def evaluate():
     print(f"  Dataset format: {fmt.upper()}")
     print("=" * 60)
 
-    print(f"\n[evaluate] Loading model from: {MODEL_PATH}")
-    model = load_model(MODEL_PATH)
+    print(f"\n[evaluate] Loading model from: {active_model_path}")
+    model = load_model(active_model_path)
 
     label_names = [EMOTIONS[i] for i in sorted(EMOTIONS.keys())]
 
@@ -114,7 +116,7 @@ def _plot_confusion_matrix(y_true, y_pred, label_names):
     axes[1].set_xlabel("Predicted Label")
     axes[1].set_ylabel("True Label")
 
-    plt.suptitle("FER2013 -- CNN Emotion Classifier Evaluation", fontsize=15, fontweight="bold")
+    plt.suptitle("FER2013 + RAF-DB -- MobileNetV2 Evaluation", fontsize=15, fontweight="bold")
     plt.tight_layout()
 
     save_path = os.path.join(OUTPUT_DIR, "confusion_matrix.png")
