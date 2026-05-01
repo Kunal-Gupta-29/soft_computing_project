@@ -27,7 +27,7 @@ from sklearn.metrics import (
 from tensorflow.keras.models import load_model
 
 from config import MODEL_PATH, MODEL_TL_PATH, USE_TRANSFER_LEARNING, OUTPUT_DIR, EMOTIONS, FER_CSV_PATH
-from preprocess import load_fer2013, _detect_format, get_folder_generators
+from preprocess import load_fer2013, _detect_format, get_folder_generators, get_folder_generators_tl
 
 
 # --- Evaluate ----------------------------------------------------------------
@@ -59,8 +59,12 @@ def evaluate():
     label_names = [EMOTIONS[i] for i in sorted(EMOTIONS.keys())]
 
     if fmt == "folder":
-        # Folder-based: use test generator
-        _, _, test_gen, class_indices = get_folder_generators()
+        # Folder-based: use test generator corresponding to the active model
+        if USE_TRANSFER_LEARNING:
+            _, _, test_gen, class_indices = get_folder_generators_tl()
+        else:
+            _, _, test_gen, class_indices = get_folder_generators()
+            
         # Re-order label names to match generator's class_indices
         ordered_labels = [k for k, v in sorted(class_indices.items(), key=lambda x: x[1])]
         label_names = [l.capitalize() for l in ordered_labels]
