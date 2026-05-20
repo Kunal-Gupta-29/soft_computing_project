@@ -11,10 +11,16 @@ import os
 # --- Paths -------------------------------------------------------------------
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR   = os.path.join(BASE_DIR, "data")
 MODEL_DIR  = os.path.join(BASE_DIR, "models")
 LOGS_DIR   = os.path.join(BASE_DIR, "logs")
 OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
+
+# --- Dataset Mode -------------------------------------------------------------
+# "merged"   -> FER2013 + RAF-DB combined (data/)          ~43,000 images
+# "rafdb"    -> RAF-DB only               (data_rafdb/)    ~15,000 images
+DATASET_MODE = "rafdb"
+
+DATA_DIR = os.path.join(BASE_DIR, "data" if DATASET_MODE == "merged" else "data_rafdb")
 
 # FER2013 CSV downloaded from Kaggle
 FER_CSV_PATH = os.path.join(DATA_DIR, "fer2013.csv")
