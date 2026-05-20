@@ -93,9 +93,9 @@ soft_computing_project/
 ├── emotion.py             # Utility functions
 ├── templates/
 │   └── index.html         # Premium dark dashboard (CSS + JS)
-├── data/
-│   ├── train/             # FER2013 training images (7 subfolders)
-│   ├── test/              # FER2013 test images
+├── data_rafdb/
+│   ├── train/             # RAF-DB training images (7 subfolders)
+│   ├── test/              # RAF-DB test images
 │   └── asd/               # ASD dataset (autistic/ + non_autistic/)
 ├── models/
 │   ├── emotion_model.h5   # Trained custom CNN
@@ -115,20 +115,38 @@ soft_computing_project/
 
 ## 📦 Dataset Setup
 
-### 1. Unified Emotion Dataset (FER2013 + RAF-DB)
-For maximum accuracy, this project uses a natively fused dataset.
+### 1. RAF-DB Emotion Dataset (Primary)
 
-**Part A: FER2013**
-1. Download from Kaggle: `https://www.kaggle.com/datasets/msambare/fer2013`
-2. Extract the folder directly into your project so you have `data/train/` and `data/test/` containing the 7 emotion subfolders.
+This project trains exclusively on **RAF-DB** (Real-world Affective Faces Database) for higher accuracy on real-world images.
 
-**Part B: RAF-DB**
-1. Download RAF-DB from Kaggle (Search: "RAF-DB dataset").
-2. Extract the dataset to your Desktop.
-3. Run the automated merge script to securely inject the diverse RAF-DB poses into your FER2013 folders:
-```bash
-python merge_datasets.py
-```
+1. Download RAF-DB from Kaggle (search: "RAF-DB dataset") or the official source.
+2. Extract to your Desktop so the folder looks like:
+   ```
+   C:\Users\<you>\Desktop\rafdb\DATASET\train\1\  (Surprise)
+   C:\Users\<you>\Desktop\rafdb\DATASET\train\2\  (Fear)
+   ...
+   ```
+3. Run the setup script to copy images into the project's `data_rafdb/` folder:
+   ```bash
+   python setup_rafdb_only.py
+   ```
+   This creates:
+   ```
+   data_rafdb/train/{angry,disgust,fear,happy,neutral,sad,surprise}/
+   data_rafdb/test/{...}/
+   ```
+4. Confirm `DATASET_MODE = "rafdb"` in `config.py` (already the default).
+
+**RAF-DB label mapping** (RAF-DB numeric → folder name):
+| RAF-DB Label | Folder Name |
+|---|---|
+| 1 | surprise |
+| 2 | fear |
+| 3 | disgust |
+| 4 | happy |
+| 5 | sad |
+| 6 | angry |
+| 7 | neutral |
 
 ### 2. ASD Dataset (Autism Detection — Optional)
 Download from Kaggle:
@@ -137,8 +155,8 @@ https://www.kaggle.com/datasets/imrankhan77/autistic-children-facial-data-set
 ```
 Place images in:
 ```
-data/asd/autistic/      (autistic children facial images)
-data/asd/non_autistic/  (non-autistic children facial images)
+data_rafdb/asd/autistic/      (autistic children facial images)
+data_rafdb/asd/non_autistic/  (non-autistic children facial images)
 ```
 
 ---
@@ -158,7 +176,10 @@ pip install -r requirements.txt
 
 ### Train Emotion Model
 ```bash
-# Option A: MobileNetV2 Transfer Learning (recommended, ~72-80% accuracy)
+# Step 1: Setup RAF-DB dataset (only needed once)
+python setup_rafdb_only.py
+
+# Option A: MobileNetV2 Transfer Learning (recommended, ~80-87% on RAF-DB)
 python train.py --mode tl
 
 # Option B: Custom CNN (faster, ~62-68% accuracy)
@@ -168,7 +189,7 @@ python train.py --mode cnn
 python train.py --ga
 ```
 
-### Train ASD Model (requires ASD dataset)
+### Train ASD Model (requires ASD dataset in data_rafdb/asd/)
 ```bash
 python train_autism.py
 ```
@@ -235,8 +256,8 @@ Training from scratch on only 28k FER2013 images is hard. The model may overfit 
 Phase 1: Freeze all 154 backbone layers → Train only the new Dense head
          (Fast convergence, avoids destroying pretrained weights)
 
-Phase 2: Unfreeze last 30 layers → Fine-tune with low learning rate (1e-4)
-         (Adapts high-level features to emotion-specific patterns)
+Phase 2: Unfreeze last 40 layers → Fine-tune with low learning rate (1e-5)
+         (Adapts high-level features to RAF-DB emotion-specific patterns)
 ```
 
 **Why MobileNetV2 (not ResNet)?**
@@ -333,10 +354,11 @@ Soft computing differs from hard computing by tolerating **uncertainty, imprecis
 | Baseline custom CNN (48×48) | ~55-65% |
 | Custom CNN + Data Augmentation | ~62-68% |
 | Custom CNN + **GA Optimized** | ~64-70% |
-| **MobileNetV2 Transfer Learning (128×128)** | ~72-80% |
-| MobileNetV2 + GA Optimized | ~74-82% |
+| **MobileNetV2 Transfer Learning (128×128, RAF-DB)** | ~80-87% |
+| MobileNetV2 + GA Optimized | ~82-88% |
 
-*State-of-the-art on FER2013: ~73-76% with standard CNNs; ~91% with Vision Transformers.*
+*RAF-DB is a higher-quality, real-world dataset than FER2013, enabling significantly better accuracy.
+State-of-the-art on RAF-DB: ~87-90% with large Vision Transformers.*
 
 ---
 
@@ -344,12 +366,13 @@ Soft computing differs from hard computing by tolerating **uncertainty, imprecis
 
 All settings in `config.py`:
 ```python
-USE_TRANSFER_LEARNING = True   # True=MobileNetV2, False=Custom CNN
-IMG_SIZE    = 48               # Custom CNN input
-IMG_SIZE_TL = 128              # Transfer learning input
-GA_POPULATION_SIZE = 10        # GA population
-GA_GENERATIONS     = 5         # GA generations
-GA_TRIAL_EPOCHS    = 5         # Epochs per GA fitness evaluation
+DATASET_MODE       = "rafdb"  # "rafdb" = RAF-DB only (data_rafdb/)
+USE_TRANSFER_LEARNING = True  # True=MobileNetV2, False=Custom CNN
+IMG_SIZE    = 48              # Custom CNN input
+IMG_SIZE_TL = 128             # Transfer learning input (MobileNetV2)
+GA_POPULATION_SIZE = 10       # GA population
+GA_GENERATIONS     = 5        # GA generations
+GA_TRIAL_EPOCHS    = 5        # Epochs per GA fitness evaluation
 ```
 
 ---
@@ -375,8 +398,8 @@ Pillow
 | Problem | Solution |
 |---------|---------|
 | `No trained model found` | Run `python train.py --mode tl` first |
-| `ASD model not found` | Run `python train_autism.py` (needs ASD dataset) |
-| `Dataset not found` | Download FER2013 from Kaggle, place in `data/` |
+| `ASD model not found` | Run `python train_autism.py` (needs ASD dataset in `data_rafdb/asd/`) |
+| `Dataset not found` | Run `python setup_rafdb_only.py` after placing RAF-DB on Desktop |
 | `Webcam not opening` | Check `WEBCAM_INDEX = 0` in config.py |
 | `Memory error during GA` | Reduce `GA_POPULATION_SIZE` to 6 |
 | `Slow training on CPU` | Use `--mode cnn` for faster training; TL is slower |

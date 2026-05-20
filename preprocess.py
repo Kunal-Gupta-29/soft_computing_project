@@ -1,23 +1,22 @@
 """
 preprocess.py
 -------------
-Handles all data loading and preprocessing for both:
-  1. FER2013 emotion dataset (grayscale 48x48 or RGB 96x96)
-  2. Kaggle ASD facial image dataset (RGB 96x96, binary classification)
+Handles all data loading and preprocessing for:
+  1. RAF-DB emotion dataset (RGB 128x128 for MobileNetV2 Transfer Learning)
+     Folder layout (created by setup_rafdb_only.py):
+       data_rafdb/train/{angry,disgust,fear,happy,neutral,sad,surprise}/
+       data_rafdb/test/{...}/
+  2. ASD facial image dataset (grayscale 96x96, binary classification)
+     Folder layout:
+       data_rafdb/asd/autistic/      (images of autistic children)
+       data_rafdb/asd/non_autistic/  (images of non-autistic children)
 
-Supports two FER2013 dataset formats automatically:
-  FORMAT A -- IMAGE FOLDER FORMAT (Kaggle "msambare/fer2013"):
-       data/train/{angry,disgust,fear,happy,neutral,sad,surprise}/
-       data/test/{...}/
+Legacy CSV support (FORMAT B) is retained for fallback compatibility:
   FORMAT B -- CSV FORMAT (original FER2013 CSV):
-       data/fer2013.csv
-
-ASD dataset layout expected:
-       data/asd/autistic/      (images of autistic children)
-       data/asd/non_autistic/  (images of non-autistic children)
+       data_rafdb/fer2013.csv  (rarely used; RAF-DB is folder-based)
 
 Usage:
-    # Emotion (TL / folder-based)
+    # Emotion (TL / folder-based -- primary path)
     from preprocess import get_folder_generators_tl
     train_gen, val_gen, test_gen, class_indices = get_folder_generators_tl()
 
@@ -78,7 +77,7 @@ def _detect_format() -> str:
 
 
 # ===============================================================================
-# EMOTION -- Grayscale 48x48  (used for custom CNN and GA)
+# EMOTION -- Grayscale 48x48  (used for custom CNN baseline and GA trials)
 # ===============================================================================
 
 def get_folder_generators(validation_split: float = VALIDATION_SPLIT):
@@ -125,7 +124,7 @@ def get_folder_generators(validation_split: float = VALIDATION_SPLIT):
 
 
 # ===============================================================================
-# EMOTION -- Grayscale 96x96  (used for MobileNetV2 Transfer Learning)
+# EMOTION -- RGB 128x128  (used for MobileNetV2 Transfer Learning on RAF-DB)
 # ===============================================================================
 
 def get_folder_generators_tl(
@@ -134,12 +133,13 @@ def get_folder_generators_tl(
     validation_split: float = VALIDATION_SPLIT,
 ):
     """
-    Build 96x96 grayscale generators for MobileNetV2 transfer learning.
+    Build 128x128 RGB generators for MobileNetV2 transfer learning on RAF-DB.
 
-    WHY 96x96?
-      - MobileNetV2 input typically expects >=96x96 for good feature extraction
-      - Larger input preserves more facial detail (eye shape, mouth curvature)
-      - The model's Lambda layer converts grayscale->RGB internally
+    WHY 128x128?
+      - MobileNetV2 input must be >=96x96; 128x128 gives richer spatial detail
+      - RAF-DB images are higher resolution than FER2013, so more detail is preserved
+      - MobileNetV2 preprocessing (mobilenet_preprocess) scales pixels to [-1, 1]
+      - Images are loaded as RGB directly (RAF-DB images are colour)
 
     Returns: train_gen, val_gen, test_gen, class_indices
     """
@@ -209,9 +209,9 @@ def get_asd_generators(
     """
     Build generators for ASD binary classification.
 
-    Expected folder layout:
-        data/asd/autistic/      -> class 0 (Autistic)
-        data/asd/non_autistic/  -> class 1 (Non-Autistic)
+    Expected folder layout (inside DATA_DIR = data_rafdb/):
+        data_rafdb/asd/autistic/      -> class 0 (Autistic)
+        data_rafdb/asd/non_autistic/  -> class 1 (Non-Autistic)
 
     Dataset source: https://www.kaggle.com/datasets/imrankhan77/autistic-children-facial-data-set
 

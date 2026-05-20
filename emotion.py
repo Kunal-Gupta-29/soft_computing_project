@@ -25,11 +25,11 @@ def main():
     )
     parser.add_argument(
         "--train",    action="store_true",
-        help="Train the CNN model on FER2013 dataset",
+        help="Train the emotion model on the RAF-DB dataset",
     )
     parser.add_argument(
         "--evaluate", action="store_true",
-        help="Evaluate the saved model on the test set",
+        help="Evaluate the saved model on the RAF-DB test split",
     )
     parser.add_argument(
         "--web",      action="store_true",
@@ -39,8 +39,13 @@ def main():
 
     if args.train:
         print("[emotion] Starting model training ...")
-        from train import train
-        train()
+        from config import USE_TRANSFER_LEARNING
+        if USE_TRANSFER_LEARNING:
+            from train import train_transfer_learning
+            train_transfer_learning()
+        else:
+            from train import train_cnn
+            train_cnn()
 
     elif args.evaluate:
         print("[emotion] Starting model evaluation ...")

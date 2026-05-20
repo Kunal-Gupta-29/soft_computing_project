@@ -6,16 +6,16 @@ Defines CNN architectures for facial emotion recognition.
 Architecture options:
   1. build_emotion_cnn()        - Custom 3-block CNN (48x48 grayscale, ~3.8M params)
                                    Used as the GA optimizer baseline.
-  2. build_mobilenetv2_emotion() - MobileNetV2 Transfer Learning (96x96 RGB, ~3.4M params)
-                                   Pre-trained on ImageNet, fine-tuned on FER2013.
-                                   Expected accuracy: 72-80% vs ~62-65% for custom CNN.
+  2. build_mobilenetv2_emotion() - MobileNetV2 Transfer Learning (128x128 RGB, ~3.4M params)
+                                   Pre-trained on ImageNet, fine-tuned on RAF-DB.
+                                   Expected accuracy: 80-87% on RAF-DB vs ~62-65% for custom CNN.
   3. get_emotion_model()         - Factory: returns TL or CNN based on USE_TRANSFER_LEARNING
 
 WHY Transfer Learning improves accuracy:
   - MobileNetV2 has learned rich, hierarchical visual features from 1.28M ImageNet images
   - Early layers detect edges/textures; later layers detect faces/expressions
   - Fine-tuning adapts these features to emotions in ~10x fewer epochs
-  - Reduces overfitting on FER2013's limited ~28k samples
+  - Reduces overfitting on smaller datasets like RAF-DB (~15k images)
 
 Usage:
     from model import get_emotion_model
@@ -138,7 +138,7 @@ def build_mobilenetv2_emotion(
 ) -> Model:
     """
     Build MobileNetV2-based emotion classifier via Transfer Learning.
-    Input matches MobileNetV2 standards (96x96x3).
+    Input: 128x128 RGB (matches RAF-DB colour images and MobileNetV2 expectations).
     """
     base_model = MobileNetV2(
         weights="imagenet",
@@ -276,10 +276,10 @@ def get_emotion_model(freeze_base: bool = True) -> Model:
     freeze_base only applies when USE_TRANSFER_LEARNING=True (Phase 1 training).
     """
     if USE_TRANSFER_LEARNING:
-        print("[model] Using MobileNetV2 Transfer Learning model (96x96).")
+        print("[model] Using MobileNetV2 Transfer Learning model (128x128 RGB).")
         return build_mobilenetv2_emotion(freeze_base=freeze_base)
     else:
-        print("[model] Using custom CNN baseline model (48x48).")
+        print("[model] Using custom CNN baseline model (48x48 grayscale).")
         return build_emotion_cnn()
 
 

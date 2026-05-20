@@ -40,11 +40,12 @@ from emotion_tracker import EmotionTracker
 _CLAHE = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 
 # --- Prior frequency correction -----------------------------------------------
-# FER2013 TRAINING set sample counts per class (alphabetical order):
-#   angry=3995, disgust=547, fear=1024, happy=8989,
-#   neutral=6198, sad=6077, surprise=3171
+# RAF-DB TRAINING set sample counts per class (alphabetical order):
+#   angry=3068, disgust=281, fear=74, happy=4772,
+#   neutral=2524, sad=1982, surprise=1290
+# Used to dampen bias towards over-represented classes at inference time.
 _TRAIN_COUNTS = np.array(
-    [3995, 547, 1024, 8989, 6198, 6077, 3171], dtype=np.float32
+    [3068, 281, 74, 4772, 2524, 1982, 1290], dtype=np.float32
 )
 _PRIOR       = _TRAIN_COUNTS / _TRAIN_COUNTS.sum()
 _PRIOR_SQRT  = np.sqrt(_PRIOR)

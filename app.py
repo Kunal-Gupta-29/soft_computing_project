@@ -36,8 +36,11 @@ from autism_detector import AutismDetector, ASDModelDetector
 from emotion_tracker import EmotionTracker
 
 # --- Prior correction (same as realtime.py) -----------------------------------
+# RAF-DB TRAINING set sample counts per class (alphabetical order):
+#   angry=3068, disgust=281, fear=74, happy=4772,
+#   neutral=2524, sad=1982, surprise=1290
 _TRAIN_COUNTS = np.array(
-    [3995, 547, 1024, 8989, 6198, 6077, 3171], dtype=np.float32
+    [3068, 281, 74, 4772, 2524, 1982, 1290], dtype=np.float32
 )
 _PRIOR       = _TRAIN_COUNTS / _TRAIN_COUNTS.sum()
 _PRIOR_SQRT  = np.sqrt(_PRIOR)

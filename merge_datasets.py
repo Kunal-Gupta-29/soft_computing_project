@@ -1,3 +1,16 @@
+"""
+merge_datasets.py
+-----------------
+[DEPRECATED - NOT REQUIRED in RAF-DB-only mode]
+
+This script was used to merge RAF-DB images into an existing FER2013 data/
+folder. Since the project has switched to RAF-DB-only mode (DATASET_MODE = "rafdb"),
+training now uses data_rafdb/ which is populated by setup_rafdb_only.py instead.
+
+If you want to use the merged FER2013+RAF-DB dataset, set DATASET_MODE = "merged"
+in config.py and run this script. Otherwise, use setup_rafdb_only.py.
+"""
+
 import os
 import shutil
 

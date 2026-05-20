@@ -1,11 +1,11 @@
 """
 train.py
 --------
-Trains the emotion recognition model on the FER2013 dataset.
+Trains the emotion recognition model on the RAF-DB dataset.
 
 Supports two training modes:
   --mode cnn   -> Custom 3-block CNN at 48x48 (fast, ~60-68% accuracy)
-  --mode tl    -> MobileNetV2 Transfer Learning at 96x96 (~72-80% accuracy)
+  --mode tl    -> MobileNetV2 Transfer Learning at 128x128 (~80-87% on RAF-DB)
   --ga         -> Run Genetic Algorithm optimizer before training (CNN mode)
   --ga-only    -> Just compare GA vs baseline (no full retraining)
 
@@ -119,7 +119,7 @@ def plot_training_history(history, title_suffix: str = "", save_dir: str = OUTPU
 # --- Custom CNN Training ------------------------------------------------------
 
 def train_cnn():
-    """Train the custom 3-block CNN on FER2013 (48x48 grayscale)."""
+    """Train the custom 3-block CNN on the emotion dataset (48x48 grayscale)."""
     try:
         fmt = _detect_format()
     except FileNotFoundError as e:
@@ -186,11 +186,10 @@ def _compute_class_weights(y_ints: np.ndarray) -> dict:
     Compute balanced class weights from an integer label array.
 
     WHY CLASS WEIGHTS?
-      FER2013 is heavily imbalanced:
-        Happy:   8,989 images   (most common)
-        Disgust:   547 images   (rarest -- 16x fewer than Happy)
-      Without class weights the model ignores rare emotions and biases
-      toward predicting Happy/Neutral almost always.
+      RAF-DB is mildly imbalanced:
+        Happy:   ~4,772 images  (most common)
+        Disgust:   ~281 images  (rarest -- ~17x fewer than Happy)
+      Without class weights the model biases toward predicting Happy/Neutral.
       Weighting forces the loss to penalise mistakes on rare classes more.
     """
     classes = np.unique(y_ints)
@@ -235,10 +234,10 @@ def train_transfer_learning(**kwargs):
         return
 
     print("=" * 60)
-    print("  Emotion CNN -- MobileNetV2 Transfer Learning (128x128)")
+    print("  Emotion CNN -- MobileNetV2 Transfer Learning (128x128 RGB)")
     print(f"  Dataset format : {fmt.upper()}")
     print(f"  Phase 1 epochs : {TL_EPOCHS_FREEZE}  (frozen backbone)")
-    print(f"  Phase 2 epochs : {TL_EPOCHS_FINETUNE} (fine-tune last 20 layers, LR=1e-5)")
+    print(f"  Phase 2 epochs : {TL_EPOCHS_FINETUNE} (fine-tune last 40 layers, LR=1e-5)")
     print("=" * 60)
 
     # -- Phase 1: Frozen backbone ----------------------------------------------
@@ -290,8 +289,8 @@ def train_transfer_learning(**kwargs):
 
     plot_training_history(history1, title_suffix="(TL Phase1 Frozen)")
 
-    # -- Phase 2: Fine-tune last 20 layers ------------------------------------
-    print("\n[train] === PHASE 2: Fine-tuning (last 20 backbone layers unfrozen) ===")
+    # -- Phase 2: Fine-tune last 40 layers ------------------------------------
+    print("\n[train] === PHASE 2: Fine-tuning (last 40 backbone layers unfrozen) ===")
     print("[train] Using LR=1e-5 to prevent catastrophic forgetting")
     model = unfreeze_top_layers(model, lr=TL_FINETUNE_LR)
 

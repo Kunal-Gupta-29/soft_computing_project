@@ -4,8 +4,8 @@ train_autism.py
 Train a MobileNetV2-based binary ASD (Autism Spectrum Disorder) classifier.
 
 Dataset required:
-    data/asd/autistic/      -> images of autistic children
-    data/asd/non_autistic/  -> images of non-autistic children
+    data_rafdb/asd/autistic/      -> images of autistic children
+    data_rafdb/asd/non_autistic/  -> images of non-autistic children
 
 Download from:
     https://www.kaggle.com/datasets/imrankhan77/autistic-children-facial-data-set
@@ -154,8 +154,8 @@ def train_autism_model():
         print("\nDownload from:")
         print("  https://www.kaggle.com/search?q=autism+image+dataset")
         print("\nExtract and place images in:")
-        print("  data/asd/autistic/      (autistic children images)")
-        print("  data/asd/non_autistic/  (non-autistic children images)")
+        print("  data_rafdb/asd/autistic/      (autistic children images)")
+        print("  data_rafdb/asd/non_autistic/  (non-autistic children images)")
         print("\nThen re-run:  python train_autism.py")
         return
 

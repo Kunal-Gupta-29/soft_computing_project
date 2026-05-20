@@ -1,7 +1,7 @@
 """
 evaluate.py
 -----------
-Evaluates the saved emotion CNN model on the FER2013 test split.
+Evaluates the saved emotion model on the RAF-DB test split.
 
 Outputs:
     * Overall accuracy printed to console
@@ -120,7 +120,7 @@ def _plot_confusion_matrix(y_true, y_pred, label_names):
     axes[1].set_xlabel("Predicted Label")
     axes[1].set_ylabel("True Label")
 
-    plt.suptitle("FER2013 + RAF-DB -- MobileNetV2 Evaluation", fontsize=15, fontweight="bold")
+    plt.suptitle("RAF-DB -- MobileNetV2 Emotion Recognition Evaluation", fontsize=15, fontweight="bold")
     plt.tight_layout()
 
     save_path = os.path.join(OUTPUT_DIR, "confusion_matrix.png")
