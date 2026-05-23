@@ -32,15 +32,15 @@ This project implements a **complete AI pipeline** for:
               │                │                │
               ▼                ▼                ▼
     ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-    │    CLAHE     │  │  CLAHE +     │  │  CLAHE +     │
-    │  Preprocess  │  │ Resize 128×128│  │ Resize 128×128│
-    └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+     │    CLAHE     │  │  CLAHE +     │  │  CLAHE +     │
+     │  Preprocess  │  │ Resize 128×128│  │ Resize 96×96  │
+     └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
            │                 │                  │
            ▼                 ▼                  ▼
   ┌────────────────┐ ┌───────────────┐  ┌──────────────────┐
   │  Emotion CNN   │ │ MobileNetV2   │  │  ASD MobileNetV2  │
   │  (Custom CNN)  │ │ Transfer Learn │  │  Binary Classifier│
-  │  48×48 gray    │ │ 128×128 gray  │  │  128×128 gray    │
+  │  48×48 gray    │ │ 128×128 RGB    │  │  96×96 gray      │
   └────────┬───────┘ └──────┬────────┘  └──────────┬───────┘
            │                │                       │
            └───────┬────────┘                       │
@@ -102,7 +102,7 @@ soft_computing_project/
 │   ├── emotion_model_tl.h5# Trained MobileNetV2 (TL)
 │   └── asd_model.h5       # Trained ASD classifier
 ├── outputs/
-│   ├── training_curves.png
+│   ├── training_curves_*_.png     # Per-phase training curves (auto-named)
 │   ├── confusion_matrix.png
 │   ├── ga_accuracy_comparison.png
 │   ├── ga_best_params.json
@@ -237,7 +237,7 @@ A CNN learns hierarchical visual features from images:
 - **Dense head**: Classifies into 7 emotion categories
 
 **Why custom CNN gets ~62-65%?**
-Training from scratch on only 28k FER2013 images is hard. The model may overfit or underfit without proper learned priors.
+Training from scratch on RAF-DB (~12k training images) is hard. The model may overfit or underfit without proper learned priors, unlike MobileNetV2 which starts from ImageNet weights.
 
 ---
 
@@ -245,19 +245,30 @@ Training from scratch on only 28k FER2013 images is hard. The model may overfit 
 
 **Core idea**: Use a model pre-trained on ImageNet (1.28M images, 1000 classes) and adapt it to our task.
 
-**Why it improves accuracy to ~72-80%:**
+**Why it improves accuracy to ~80-87%:**
 - MobileNetV2 has already learned rich feature representations (edges → textures → faces → expressions)
 - Early layers encode universally useful features (edges, colors)
 - Later layers encode task-specific features (already close to facial recognition)
-- We only need to fine-tune the last 30 layers rather than train from scratch
+- We fine-tune the last 40 layers rather than train from scratch
 
-**Two-Phase Strategy:**
+**Two-Phase Strategy (Emotion MobileNetV2):**
 ```
-Phase 1: Freeze all 154 backbone layers → Train only the new Dense head
+Phase 1: Freeze all backbone layers → Train only the new Dense head
          (Fast convergence, avoids destroying pretrained weights)
+         Epochs: TL_EPOCHS_FREEZE = 15
 
-Phase 2: Unfreeze last 40 layers → Fine-tune with low learning rate (1e-5)
+Phase 2: Unfreeze last 40 layers → Fine-tune with LR = 1e-5
          (Adapts high-level features to RAF-DB emotion-specific patterns)
+         Epochs: TL_EPOCHS_FINETUNE = 40
+```
+
+**Two-Phase Strategy (ASD MobileNetV2):**
+```
+Phase 1: Freeze all backbone layers → Train Dense head only
+         Epochs: ASD_EPOCHS_FREEZE = 10
+
+Phase 2: Unfreeze last 30 layers → Fine-tune with LR = 5e-5
+         Epochs: ASD_EPOCHS_FINETUNE = 20
 ```
 
 **Why MobileNetV2 (not ResNet)?**
@@ -413,7 +424,7 @@ After running the full pipeline:
 
 | File | Description |
 |------|-------------|
-| `outputs/training_curves.png` | Accuracy & loss curves |
+| `outputs/training_curves_*_.png` | Accuracy & loss curves (one per training phase) |
 | `outputs/confusion_matrix.png` | Per-class prediction matrix |
 | `outputs/ga_accuracy_comparison.png` | Baseline vs GA bar chart |
 | `outputs/ga_fitness_log.csv` | Per-generation fitness data |
@@ -425,10 +436,11 @@ After running the full pipeline:
 
 ## 👨‍🎓 Team & Acknowledgements
 
-- Dataset: FER2013 (Kaggle) · RAF-DB (Real-world Affective Faces) · ASD Facial Dataset (Kaggle)
+- Dataset: **RAF-DB** (Real-world Affective Faces Database, primary) · **ASD Facial Dataset** (Kaggle) · FER2013 (Kaggle, supported but not the default)
 - Pre-trained weights: MobileNetV2 on ImageNet (TensorFlow/Keras)
 - Framework: TensorFlow 2.x, OpenCV, Flask
 
 ---
 
 *NOTE: This is an academic project. ASD risk estimation is not a medical diagnosis.*
+

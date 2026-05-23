@@ -211,10 +211,10 @@ def _compute_class_weights_from_gen(gen) -> dict:
 
 def train_transfer_learning(**kwargs):
     """
-    Train MobileNetV2 on FER2013 (128x128 grayscale) using two-phase transfer learning.
+    Train MobileNetV2 on RAF-DB (128x128 RGB) using two-phase transfer learning.
 
     Phase 1: Freeze backbone, train head only -> fast convergence
-    Phase 2: Unfreeze last 20 layers, fine-tune with LR=1e-5 -> accuracy boost
+    Phase 2: Unfreeze last 40 layers, fine-tune with LR=1e-5 -> accuracy boost
 
 
     WHY TWO PHASES?
@@ -334,7 +334,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--mode", choices=["cnn", "tl"], default=None,
         help=(
-            "Training mode: 'cnn' = custom CNN (48x48), 'tl' = MobileNetV2 (96x96). "
+            "Training mode: 'cnn' = custom CNN (48x48 grayscale), 'tl' = MobileNetV2 (128x128 RGB). "
             "Defaults to USE_TRANSFER_LEARNING in config.py."
         ),
     )
